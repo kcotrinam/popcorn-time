@@ -6,11 +6,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-popcorn_time}
       POSTGRES_USER: ${POSTGRES_USER:-popcorn_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
-    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    ports: ['${POSTGRES_PORT:-5432}:5432']
     volumes: [postgres_data:/var/lib/postgresql/data]
     networks: [popcorn]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -24,7 +24,7 @@ services:
       CORS_ORIGIN: http://localhost:8080
       LOG_LEVEL: info
       DATABASE_URL: postgresql://${POSTGRES_USER:-popcorn_user}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-popcorn_time}?schema=public
-    ports: ["${HOST_API_PORT:-3000}:3000"]
+    ports: ['${HOST_API_PORT:-3000}:3000']
     depends_on: { db: { condition: service_healthy } }
     networks: [popcorn]
   web:
@@ -33,8 +33,13 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_BASE_URL: http://localhost:${HOST_API_PORT:-3000}/api/v1
+        VITE_AUTH0_DOMAIN: ${VITE_AUTH0_DOMAIN:-}
+        VITE_AUTH0_CLIENT_ID: ${VITE_AUTH0_CLIENT_ID:-}
+        VITE_AUTH0_AUDIENCE: ${VITE_AUTH0_AUDIENCE:-}
+        VITE_AUTH0_REDIRECT_URI: ${VITE_AUTH0_REDIRECT_URI:-http://localhost:8080/welcome}
+        VITE_AUTH0_LOGOUT_URI: ${VITE_AUTH0_LOGOUT_URI:-http://localhost:8080}
     restart: unless-stopped
-    ports: ["8080:8080"]
+    ports: ['8080:8080']
     depends_on: [api]
     networks: [popcorn]
 networks: { popcorn: {} }
