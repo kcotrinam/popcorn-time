@@ -1,0 +1,1 @@
+{ "extends": "@popcorn-time/typescript-config/base.json", "files": [] }

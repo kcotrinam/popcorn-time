@@ -1,0 +1,9 @@
+{
+  "name": "@popcorn-time/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "scripts": { "build": "tsc -p tsconfig.json", "typecheck": "tsc -p tsconfig.json --noEmit", "lint": "eslint src" },
+  "devDependencies": { "@popcorn-time/eslint-config": "workspace:*", "@popcorn-time/typescript-config": "workspace:*", "eslint": "^9.36.0", "typescript": "^5.9.2" }
+}

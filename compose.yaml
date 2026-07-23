@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-popcorn_time}
+      POSTGRES_USER: ${POSTGRES_USER:-popcorn_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me}
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    networks: [popcorn]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      API_PREFIX: api/v1
+      CORS_ORIGIN: http://localhost:8080
+      LOG_LEVEL: info
+      DATABASE_URL: postgresql://${POSTGRES_USER:-popcorn_user}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-popcorn_time}?schema=public
+    ports: ["${HOST_API_PORT:-3000}:3000"]
+    depends_on: { db: { condition: service_healthy } }
+    networks: [popcorn]
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:${HOST_API_PORT:-3000}/api/v1
+    restart: unless-stopped
+    ports: ["8080:8080"]
+    depends_on: [api]
+    networks: [popcorn]
+networks: { popcorn: {} }
+volumes: { postgres_data: {} }
