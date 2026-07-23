@@ -5,5 +5,8 @@ export class AppError extends Error {
     message: string,
     readonly details?: unknown,
     readonly isOperational = true,
-  ) { super(message); this.name = 'AppError'; }
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
 }

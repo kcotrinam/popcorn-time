@@ -1,1 +1,9 @@
-{ "extends": "@popcorn-time/typescript-config/react.json", "compilerOptions": { "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo", "baseUrl": ".", "paths": { "@/*": ["./src/*"], "@popcorn-time/shared": ["../../packages/shared/src/index.ts"] } }, "include": ["src"] }
+{
+  "extends": "@popcorn-time/typescript-config/react.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "baseUrl": ".",
+    "paths": { "@/*": ["./src/*"], "@popcorn-time/shared": ["../../packages/shared/src/index.ts"] }
+  },
+  "include": ["src"]
+}

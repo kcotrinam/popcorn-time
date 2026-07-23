@@ -1,1 +1,3 @@
-export interface HealthRepository { check(): Promise<void>; }
+export interface HealthRepository {
+  check(): Promise<void>;
+}

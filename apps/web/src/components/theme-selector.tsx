@@ -1,3 +1,22 @@
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import { useThemeMode, type ThemeMode } from '@/app/theme/theme-provider';
-export function ThemeSelector() { const { mode, setMode } = useThemeMode(); return <FormControl size="small" sx={{ minWidth: 130 }}><InputLabel id="theme-mode-label">Theme</InputLabel><Select labelId="theme-mode-label" label="Theme" value={mode} onChange={(event) => setMode(event.target.value as ThemeMode)}>{(['light', 'dark', 'system'] as ThemeMode[]).map((item) => <MenuItem key={item} value={item}>{item[0]!.toUpperCase() + item.slice(1)}</MenuItem>)}</Select></FormControl>; }
+export function ThemeSelector() {
+  const { mode, setMode } = useThemeMode();
+  return (
+    <FormControl size="small" sx={{ minWidth: 130 }}>
+      <InputLabel id="theme-mode-label">Theme</InputLabel>
+      <Select
+        labelId="theme-mode-label"
+        label="Theme"
+        value={mode}
+        onChange={(event) => setMode(event.target.value as ThemeMode)}
+      >
+        {(['light', 'dark', 'system'] as ThemeMode[]).map((item) => (
+          <MenuItem key={item} value={item}>
+            {item[0]!.toUpperCase() + item.slice(1)}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}

@@ -25,14 +25,14 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <AppThemeProvider>
       <QueryClientProvider client={queryClient}>
         {hasAuthConfiguration ? (
-      <Auth0Provider
-        domain={authConfig.domain}
-        clientId={authConfig.clientId}
-        authorizationParams={{
-          redirect_uri: authConfig.redirectUri,
-          ...(authConfig.audience ? { audience: authConfig.audience } : {}),
-          scope: 'openid profile email',
-        }}
+          <Auth0Provider
+            domain={authConfig.domain}
+            clientId={authConfig.clientId}
+            authorizationParams={{
+              redirect_uri: authConfig.redirectUri,
+              ...(authConfig.audience ? { audience: authConfig.audience } : {}),
+              scope: 'openid profile email',
+            }}
             onRedirectCallback={(appState) =>
               window.history.replaceState({}, document.title, appState?.returnTo ?? '/welcome')
             }

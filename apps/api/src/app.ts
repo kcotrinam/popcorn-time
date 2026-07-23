@@ -14,12 +14,21 @@ import { createHealthRouter } from './modules/health/health.routes.js';
 
 export function createApp(): Express {
   const app: Express = express();
-  app.use(helmet()); app.use(cors({ origin: env.CORS_ORIGIN })); app.use(express.json({ limit: '1mb' }));
-  app.use(requestId); app.use(pinoHttp({ logger, customProps: (req: Request) => ({ requestId: req.requestId }) }));
+  app.use(helmet());
+  app.use(cors({ origin: env.CORS_ORIGIN }));
+  app.use(express.json({ limit: '1mb' }));
+  app.use(requestId);
+  app.use(pinoHttp({ logger, customProps: (req: Request) => ({ requestId: req.requestId }) }));
   const api = express.Router();
-  api.get('/', (_req, res) => res.json({ name: `${APP_NAME} API`, version: API_VERSION, status: 'running' }));
-  api.use(createHealthRouter()); app.use(`/${env.API_PREFIX}`, api);
-  app.get('/api/docs/openapi.json', (_req, res) => res.json(openapiSpec)); app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
-  app.use(notFound); app.use(errorHandler); return app;
+  api.get('/', (_req, res) =>
+    res.json({ name: `${APP_NAME} API`, version: API_VERSION, status: 'running' }),
+  );
+  api.use(createHealthRouter());
+  app.use(`/${env.API_PREFIX}`, api);
+  app.get('/api/docs/openapi.json', (_req, res) => res.json(openapiSpec));
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+  app.use(notFound);
+  app.use(errorHandler);
+  return app;
 }
 export const app: Express = createApp();
