@@ -7,12 +7,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model AppMetadata {
-  id        String   @id @default(uuid()) @db.Uuid
-  key       String   @unique
-  value     String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+enum PreferredLanguage {
+  ES
+  EN
+}
 
-  @@map("app_metadata")
+enum Theme {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+model User {
+  id                 String            @id @default(uuid()) @db.Uuid
+  authProviderId     String            @unique @map("auth_provider_id")
+  email              String?
+  emailVerified      Boolean           @default(false) @map("email_verified")
+  username           String?           @db.VarChar(30)
+  usernameNormalized String?           @db.VarChar(30) @map("username_normalized")
+  displayName        String            @db.VarChar(80) @map("display_name")
+  avatarUrl          String?           @map("avatar_url")
+  preferredLanguage  PreferredLanguage @default(ES) @map("preferred_language")
+  theme              Theme             @default(SYSTEM)
+  lastLoginAt        DateTime?         @map("last_login_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+  deletedAt          DateTime?         @map("deleted_at")
+
+  @@index([deletedAt], map: "users_deleted_at_idx")
+  @@map("users")
 }

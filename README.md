@@ -47,7 +47,7 @@ Run all services as containers with `docker compose up --build`. The Vite dev se
 
 ## Architecture
 
-The API follows `Router → Controller → Service → Repository → Prisma`. The only persistence model is `app_metadata`. The health endpoint executes a live `SELECT 1` through its repository and returns 503 with a safe error envelope if PostgreSQL is unavailable. Request IDs, centralized errors, validation, security headers, CORS, and structured redacted logs are applied globally.
+The API follows `Router → Controller → Service → Repository → Prisma`. The `users` table stores the application's internal representation of an Auth0 identity. Its UUID primary key is independent from Auth0's globally unique `sub`, which is stored as `auth_provider_id` and remains reserved after soft delete. The health endpoint executes a live `SELECT 1` through its repository and returns 503 with a safe error envelope if PostgreSQL is unavailable. Request IDs, centralized errors, validation, security headers, CORS, and structured redacted logs are applied globally.
 
 ```
 apps/
@@ -66,6 +66,12 @@ packages/
 ## Prisma workflow
 
 Run `pnpm db:generate` after schema changes, `pnpm db:migrate` to create/apply development migrations, and `pnpm db:studio` to inspect data. To reset disposable local data, stop the stack and intentionally run `docker compose down -v`; this removes the database volume.
+
+### User persistence
+
+`users` is the first application-domain table. `email` is intentionally nullable and non-unique because Auth0 identities can omit it and it is not the application's stable identity. `username` and `username_normalized` are nullable until settings/onboarding exist; the normalized value is lowercase and has a PostgreSQL partial unique index that applies only to active users. This allows multiple null usernames and reusing a username after a user is soft-deleted (`deleted_at` is set), while preventing active case-insensitive duplicates. `auth_provider_id` remains globally unique after soft delete so an Auth0 `sub` can never be reassigned.
+
+The partial username index is defined manually in `20260723000000_add_authentication_users/migration.sql` because Prisma schema syntax cannot describe its `WHERE deleted_at IS NULL AND username_normalized IS NOT NULL` predicate. Apply migrations with `pnpm db:migrate` after starting PostgreSQL. Integration persistence tests require an explicitly isolated `INTEGRATION_DATABASE_URL` schema and run with `pnpm --filter @popcorn-time/api test:integration`.
 
 ## Testing and troubleshooting
 
