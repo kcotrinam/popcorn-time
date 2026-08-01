@@ -12,7 +12,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@auth0/auth0-react": "^2.22.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.2",

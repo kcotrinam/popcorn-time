@@ -3,5 +3,8 @@ export const ErrorCode = {
   NOT_FOUND: 'NOT_FOUND',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

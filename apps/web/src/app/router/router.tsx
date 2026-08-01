@@ -1,6 +1,10 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
-import { AuthErrorPage } from '@/features/auth/pages/auth-error-page';
+import {
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  VerifyEmailPage,
+} from '@/features/auth/pages/token-pages';
 import { SignInPage } from '@/features/auth/pages/sign-in-page';
 import { SignUpPage } from '@/features/auth/pages/sign-up-page';
 import { WelcomePage } from '@/features/auth/pages/welcome-page';
@@ -16,6 +20,9 @@ export const router = createBrowserRouter([
       </PublicOnlyRoute>
     ),
   },
+  { path: '/verify-email', element: <VerifyEmailPage /> },
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   {
     path: '/sign-up',
     element: (
@@ -32,6 +39,5 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  { path: '/auth/error', element: <AuthErrorPage /> },
   { path: '*', element: <Navigate to="/sign-in" replace /> },
 ]);

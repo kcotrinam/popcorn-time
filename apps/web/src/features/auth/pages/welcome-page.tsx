@@ -1,16 +1,23 @@
 import { Button, Stack, Typography } from '@mui/material';
-import { useAuth0 } from '@auth0/auth0-react';
-import { useAuthActions } from '../hooks/use-auth-actions';
-
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { clearCsrfToken } from '@/services/http-client';
+import { getCurrentUser, logout } from '../auth.api';
 export function WelcomePage() {
-  const { user } = useAuth0();
-  const { signOut } = useAuthActions();
-  const name = user?.name ?? user?.nickname ?? user?.email?.split('@')[0] ?? 'User';
+  const { data: user } = useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser });
+  const client = useQueryClient();
+  const signOut = () => {
+    void logout().finally(() => {
+      clearCsrfToken();
+      client.clear();
+      window.location.assign('/sign-in');
+    });
+  };
   return (
     <Stack minHeight="100vh" alignItems="center" justifyContent="center" spacing={3}>
       <Typography variant="h3" component="h1">
-        Welcome, {name}
+        Welcome, {user?.displayName ?? 'User'}
       </Typography>
+      <Typography color="text.secondary">{user?.email}</Typography>
       <Button variant="text" color="secondary" onClick={signOut}>
         Sign out
       </Button>

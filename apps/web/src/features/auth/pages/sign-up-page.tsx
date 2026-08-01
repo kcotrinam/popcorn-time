@@ -1,104 +1,66 @@
-import MovieFilterRoundedIcon from '@mui/icons-material/MovieFilterRounded';
-import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
-import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
-import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
+import { Alert, Button, Link, Paper, Stack, TextField, Typography } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { Checkbox, FormControlLabel, Link, Stack, Typography } from '@mui/material';
-import type { ReactNode } from 'react';
-import { APP_NAME } from '@popcorn-time/shared';
-import { AuthActions } from '../components/auth-actions';
+import { register } from '../auth.api';
 import { AuthLayout } from '../components/auth-layout';
-import { useAuthActions } from '../hooks/use-auth-actions';
-
 export function SignUpPage() {
-  const { signUpWithEmail } = useAuthActions();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const mutation = useMutation({ mutationFn: register });
   return (
     <AuthLayout>
-      <Stack spacing={4} maxWidth={448} mx="auto">
-        <Stack direction="row" spacing={1} alignItems="center" display={{ md: 'none' }}>
-          <MovieFilterRoundedIcon color="primary" aria-hidden="true" />
-          <Typography fontWeight={700}>{APP_NAME}</Typography>
-        </Stack>
-        <Stack spacing={1}>
-          <Typography variant="h4">Create your account</Typography>
-          <Typography color="text.secondary">
-            Join the community of cinema enthusiasts. Already have an account?{' '}
-            <Link component={RouterLink} to="/sign-in" color="primary">
-              Sign in
-            </Link>
-          </Typography>
-        </Stack>
-        <AuthActions emailLabel="Continue with email" onEmail={signUpWithEmail} />
-        <Stack spacing={3.25} pt={1}>
-          <Feature
-            icon={<ShieldOutlinedIcon />}
-            title="Secure & Trusted"
-            description="Your account is protected by Auth0, an industry-leading identity platform."
-          />
-          <Feature
-            icon={<PersonOutlineRoundedIcon />}
-            title="One Account, All Devices"
-            description="Access your library and watchlist from anywhere."
-          />
-          <Feature
-            icon={<MovieOutlinedIcon />}
-            title="Personalized Experience"
-            description="Get recommendations and track your cinematic journey."
-          />
-        </Stack>
-        <FormControlLabel
-          sx={{ alignItems: 'flex-start', m: 0, '& .MuiFormControlLabel-label': { pt: '5px' } }}
-          control={
-            <Checkbox
-              size="small"
-              sx={{ p: 0, mr: 1.5 }}
-              inputProps={{ 'aria-label': 'Agree to terms and privacy policy' }}
-            />
-          }
-          label={
-            <Typography variant="caption" color="text.secondary">
-              I agree to the{' '}
-              <Link href="#terms" color="primary">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="#privacy" color="primary">
-                Privacy Policy
-              </Link>
-              .
-            </Typography>
-          }
-        />
-        <Typography variant="caption" color="text.secondary" pt={2}>
-          © 2024 {APP_NAME}. All cinematic rights reserved.
+      <Stack spacing={3}>
+        <Typography variant="h4">Create your account</Typography>
+        <Typography color="text.secondary">
+          Already have an account?{' '}
+          <Link component={RouterLink} to="/sign-in">
+            Sign in
+          </Link>
         </Typography>
+        <Paper sx={{ p: 4 }}>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              mutation.mutate({ email, password, displayName });
+            }}
+          >
+            <Stack spacing={2}>
+              <TextField
+                label="Display name"
+                required
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+              />
+              <TextField
+                label="Email"
+                type="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+              <TextField
+                label="Password"
+                type="password"
+                required
+                helperText="At least 12 characters"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              {mutation.isSuccess ? (
+                <Alert severity="success">Check your email to verify your account.</Alert>
+              ) : null}
+              {mutation.error ? (
+                <Alert severity="error">Please check your details and try again.</Alert>
+              ) : null}
+              <Button type="submit" variant="contained" disabled={mutation.isPending}>
+                Create account
+              </Button>
+            </Stack>
+          </form>
+        </Paper>
       </Stack>
     </AuthLayout>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  description,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Stack direction="row" spacing={2} alignItems="flex-start">
-      <Typography color="text.secondary" sx={{ display: 'flex', pt: '2px' }} aria-hidden="true">
-        {icon}
-      </Typography>
-      <Stack spacing={0.25}>
-        <Typography variant="body2" fontWeight={500}>
-          {title}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {description}
-        </Typography>
-      </Stack>
-    </Stack>
   );
 }

@@ -1,4 +1,5 @@
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import express, { type Express, type Request } from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
@@ -11,12 +12,14 @@ import { notFound } from './middlewares/not-found.js';
 import { requestId } from './middlewares/request-id.js';
 import { logger } from './lib/logger.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
+import { createAuthRouter } from './modules/auth/auth.routes.js';
 
 export function createApp(): Express {
   const app: Express = express();
   app.use(helmet());
-  app.use(cors({ origin: env.CORS_ORIGIN }));
+  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
   app.use(express.json({ limit: '1mb' }));
+  app.use(cookieParser());
   app.use(requestId);
   app.use(pinoHttp({ logger, customProps: (req: Request) => ({ requestId: req.requestId }) }));
   const api = express.Router();
@@ -24,6 +27,7 @@ export function createApp(): Express {
     res.json({ name: `${APP_NAME} API`, version: API_VERSION, status: 'running' }),
   );
   api.use(createHealthRouter());
+  api.use(createAuthRouter());
   app.use(`/${env.API_PREFIX}`, api);
   app.get('/api/docs/openapi.json', (_req, res) => res.json(openapiSpec));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
