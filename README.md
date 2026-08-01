@@ -47,7 +47,7 @@ Run all services as containers with `docker compose up --build`. The Vite dev se
 
 ## Architecture
 
-The API follows `Router → Controller → Service → Repository → Prisma`. The `users` table stores the application's internal representation of an Auth0 identity. Its UUID primary key is independent from Auth0's globally unique `sub`, which is stored as `auth_provider_id` and remains reserved after soft delete. The health endpoint executes a live `SELECT 1` through its repository and returns 503 with a safe error envelope if PostgreSQL is unavailable. Request IDs, centralized errors, validation, security headers, CORS, and structured redacted logs are applied globally.
+The API follows `Router → Controller → Service → Repository → Prisma`. The `users` table stores the application's internal account identity, with a UUID primary key and normalized, unique email address. The health endpoint executes a live `SELECT 1` through its repository and returns 503 with a safe error envelope if PostgreSQL is unavailable. Request IDs, centralized errors, validation, security headers, CORS, and structured redacted logs are applied globally.
 
 ```
 apps/
@@ -59,9 +59,13 @@ packages/
   typescript-config/
 ```
 
+## Authentication
+
+Popcorn Time uses its own email/password authentication. Accounts must verify their email before signing in. Passwords are Argon2id hashes; access and rotating refresh credentials are `Secure`, `HttpOnly`, `SameSite=Lax` cookies. Refresh-token reuse revokes that session family, and password resets revoke every active session. Configure Resend for verification and reset emails.
+
 ## Environment variables
 
-`NODE_ENV`, `API_PORT`, `API_PREFIX`, `CORS_ORIGIN`, `LOG_LEVEL`, and `DATABASE_URL` are validated by the API. PostgreSQL container setup additionally reads `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`. The web app reads `VITE_API_BASE_URL`. See `.env.example` for safe sample values.
+`NODE_ENV`, `API_PORT`, `API_PREFIX`, `CORS_ORIGIN`, `LOG_LEVEL`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `WEB_URL`, cookie settings, `RESEND_API_KEY`, and `EMAIL_FROM` are validated by the API. PostgreSQL container setup additionally reads `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`. The web app reads `VITE_API_BASE_URL`. See `.env.example` for safe sample values.
 
 ## Prisma workflow
 
@@ -69,7 +73,7 @@ Run `pnpm db:generate` after schema changes, `pnpm db:migrate` to create/apply d
 
 ### User persistence
 
-`users` is the first application-domain table. `email` is intentionally nullable and non-unique because Auth0 identities can omit it and it is not the application's stable identity. `username` and `username_normalized` are nullable until settings/onboarding exist; the normalized value is lowercase and has a PostgreSQL partial unique index that applies only to active users. This allows multiple null usernames and reusing a username after a user is soft-deleted (`deleted_at` is set), while preventing active case-insensitive duplicates. `auth_provider_id` remains globally unique after soft delete so an Auth0 `sub` can never be reassigned.
+`users` is the internal account table. `email` and `email_normalized` are required and unique; the latter provides case-insensitive uniqueness. `username` and `username_normalized` are nullable until settings/onboarding exist; the normalized value is lowercase and has a PostgreSQL partial unique index that applies only to active users. This allows multiple null usernames and reusing a username after a user is soft-deleted (`deleted_at` is set), while preventing active case-insensitive duplicates.
 
 The partial username index is defined manually in `20260723000000_add_authentication_users/migration.sql` because Prisma schema syntax cannot describe its `WHERE deleted_at IS NULL AND username_normalized IS NOT NULL` predicate. Apply migrations with `pnpm db:migrate` after starting PostgreSQL. Integration persistence tests require an explicitly isolated `INTEGRATION_DATABASE_URL` schema and run with `pnpm --filter @popcorn-time/api test:integration`.
 
