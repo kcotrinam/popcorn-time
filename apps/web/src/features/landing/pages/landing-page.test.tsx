@@ -66,10 +66,11 @@ describe('LandingPage', () => {
         </QueryClientProvider>
       </AppThemeProvider>,
     );
-    expect(screen.getByRole('link', { name: 'Open profile for Ana Torres' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Abrir aplicación para Ana Torres' })).toHaveAttribute(
       'href',
-      '/welcome',
+      '/explore',
     );
+    expect(screen.getByRole('link', { name: 'Explorar' })).toHaveAttribute('href', '/explore');
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument();
   });
 });

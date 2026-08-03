@@ -71,28 +71,33 @@ export function LandingNavbar() {
             </Button>
           </Box>
           {user ? (
-            <Tooltip title="My profile">
-              <Box
-                component={RouterLink}
-                to="/welcome"
-                aria-label={`Open profile for ${user.displayName}`}
-                sx={{ display: 'inline-flex', borderRadius: '50%', textDecoration: 'none' }}
-              >
-                <Avatar
-                  src={user.avatarUrl ?? undefined}
-                  alt={user.displayName}
-                  sx={{
-                    width: 38,
-                    height: 38,
-                    bgcolor: 'primary.main',
-                    color: 'primary.contrastText',
-                    fontWeight: 700,
-                  }}
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Button component={RouterLink} to="/explore" variant="contained">
+                Explorar
+              </Button>
+              <Tooltip title="Abrir aplicación">
+                <Box
+                  component={RouterLink}
+                  to="/explore"
+                  aria-label={`Abrir aplicación para ${user.displayName}`}
+                  sx={{ display: 'inline-flex', borderRadius: '50%', textDecoration: 'none' }}
                 >
-                  {userInitials(user.displayName)}
-                </Avatar>
-              </Box>
-            </Tooltip>
+                  <Avatar
+                    src={user.avatarUrl ?? undefined}
+                    alt={user.displayName}
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {userInitials(user.displayName)}
+                  </Avatar>
+                </Box>
+              </Tooltip>
+            </Stack>
           ) : (
             <Stack direction="row" spacing={1}>
               <Button

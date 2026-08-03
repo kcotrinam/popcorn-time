@@ -11,5 +11,5 @@ export function PublicOnlyRoute({ children }: { children: ReactNode }) {
     retry: false,
   });
   if (isLoading) return <AuthenticationLoadingScreen />;
-  return isSuccess ? <Navigate to="/welcome" replace /> : <>{children}</>;
+  return isSuccess ? <Navigate to="/" replace /> : <>{children}</>;
 }

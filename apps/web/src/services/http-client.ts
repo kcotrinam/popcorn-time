@@ -16,6 +16,23 @@ function requiresCsrf(path: string, method: string): boolean {
   );
 }
 
+export type QueryParams = Record<string, string | number | boolean | null | undefined>;
+
+export type GetJsonOptions = {
+  query?: QueryParams;
+  signal?: AbortSignal;
+};
+
+function withQuery(path: string, query?: QueryParams): string {
+  if (!query) return path;
+  const parameters = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') parameters.set(key, String(value));
+  });
+  const search = parameters.toString();
+  return search ? `${path}?${search}` : path;
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = init.method ?? 'GET';
   const csrfRequired = requiresCsrf(path, method);
@@ -41,7 +58,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
 }
-export const getJson = <T>(path: string) => request<T>(path);
+export const getJson = <T>(path: string, options: GetJsonOptions = {}) =>
+  request<T>(withQuery(path, options.query), { signal: options.signal });
 export const postJson = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
 export const clearCsrfToken = () => {

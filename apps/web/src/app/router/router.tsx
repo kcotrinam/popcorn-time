@@ -11,6 +11,9 @@ import { WelcomePage } from '@/features/auth/pages/welcome-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { PublicOnlyRoute } from '@/features/auth/components/public-only-route';
 import { LandingPage } from '@/features/landing/pages/landing-page';
+import { AppShell } from '@/features/catalog/components/app-shell';
+import { ExplorePage } from '@/features/catalog/pages/explore-page';
+import { CatalogDetailPage } from '@/features/catalog/pages/catalog-detail-page';
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   {
@@ -37,6 +40,26 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <WelcomePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/explore',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <ExplorePage />
+        </AppShell>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/explore/:type/:id',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <CatalogDetailPage />
+        </AppShell>
       </ProtectedRoute>
     ),
   },
