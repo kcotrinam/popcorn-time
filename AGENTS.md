@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Popcorn Time is a multi-user personal media-management application for movies, series, anime, and documentaries. It supports personal watchlists, watched status, ratings from 1 to 10 in 0.5 increments, private comments, user recommendations, and shared viewing plans with up to five other users.
+Popcorn Time is a family-oriented, multi-user media manager for movies, TV series, anime, and documentaries.
 
 ## Technology Stack
 
@@ -17,11 +17,14 @@ Popcorn Time is a multi-user personal media-management application for movies, s
 
 Backend modules follow `Router → Controller → Service → Repository → Prisma`. Keep business logic out of controllers and validate input with Zod. Do not use `any`. Do not add Zustand or Redux unless a real global client-state requirement has been explicitly approved.
 
+Catalog modules follow `Router → Controller → Service → Provider/Repository → TMDB client`. TMDB is called only from the Express backend; normalized catalog contracts are shared through `@popcorn-time/shared`. Catalog endpoints are public and rate-limited. The frontend must never call TMDB directly or expose its access token.
+
 ## Authentication Rules
 
 - The application owns authentication, password hashes, sessions, and tokens.
 - Never expose JWT secrets, password hashes, or email tokens to the frontend.
 - Use the application's UUID as the internal user ID and a normalized email address as the login identifier.
+- Preserve email verification, session rotation, CSRF protection for cookie-authenticated mutations, and secret redaction in logs.
 
 ## Database Rules
 
@@ -29,14 +32,14 @@ Backend modules follow `Router → Controller → Service → Repository → Pri
 - Use snake_case database names through Prisma mappings.
 - Use soft deletes only where explicitly defined, preserve migration history, and inspect generated SQL before applying migrations.
 
-## Current Phase and Task
+## Routing and UI Rules
 
-Phase 0 is complete: monorepo foundation, frontend and backend applications, PostgreSQL and Prisma, Docker Compose, Swagger/OpenAPI, and testing/quality tooling. Custom email/password authentication provides registration, verification, sign-in, protected routes, logout, refresh sessions, password reset, CSRF protection, and the welcome screen.
+The public landing page lives at `/` and must remain accessible to authenticated and unauthenticated visitors. It uses only local static mock poster assets and English copy. Its visual tokens must come from the Material UI theme palette; do not introduce hard-coded brand colors. Product-entry CTAs use `/sign-in` until their destination pages exist. Authenticated users remain on the landing page and see their avatar in the navbar.
 
-The public landing page lives at `/` and must remain accessible to authenticated and unauthenticated users. It uses only local static mock poster assets and English copy for now, regardless of user language preferences. Its visual tokens must come from the Material UI theme palette; do not introduce hard-coded brand colors. Product-entry CTAs use `/sign-in` until their destination pages exist. After a successful sign-in, redirect to `/`; the navbar replaces sign-in/sign-up actions with the authenticated user's avatar.
+`/explore` and `/explore/:type/:id` are authenticated application routes. They use the application shell with its desktop sidebar and responsive mobile navigation. Phase progress belongs in `docs/roadmap.md`, not in this file.
 
 Read relevant files under `docs/` before implementing a task.
 
 ## Validation
 
-Before claiming completion, run the applicable format check, lint, typecheck, tests, and build. Do not report a command as passing unless it was executed successfully.
+Before claiming completion, run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`. When database work changes, also run the applicable integration tests. Do not report a command as passing unless it was executed successfully.

@@ -1,6 +1,6 @@
 # Popcorn Time
 
-Phase 0 technical foundation for a personal media-library application. It establishes a pnpm monorepo, React client, Express API, PostgreSQL/Prisma persistence, observability, documentation, tests, and Docker workflow. It deliberately contains no authentication or media-domain functionality.
+Popcorn Time is a family-oriented, multi-user media manager for movies, TV series, anime, and documentaries. The repository includes the pnpm monorepo, React client, Express API, PostgreSQL/Prisma persistence, custom authentication, a public TMDB-backed catalog API, an authenticated Explore experience, observability, documentation, tests, and Docker workflow.
 
 ## Stack
 
@@ -52,7 +52,7 @@ The API follows `Router → Controller → Service → Repository → Prisma`. T
 ```
 apps/
   api/       Express, Prisma, OpenAPI
-  web/       React/Vite status client
+  web/       React/Vite landing, authentication, and Explore client
 packages/
   shared/    shared technical contracts/constants
   eslint-config/
@@ -89,4 +89,4 @@ The partial username index is defined manually in `20260723000000_add_authentica
 
 ## Scope
 
-Phase 0 intentionally excludes users, authentication, catalog data, TMDB, watchlists, ratings, comments, recommendations, shared plans, queues, WebSockets, and cloud deployment.
+The current implementation includes internal users, custom authentication, the public TMDB-backed catalog, and the authenticated Explore experience. Personal libraries, watchlist/watched status, ratings, comments, recommendations, shared plans, notifications, Google OAuth, a mobile app, and i18n remain future work.
