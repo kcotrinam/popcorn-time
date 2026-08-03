@@ -1,18 +1,19 @@
 import { Alert, Button, Link, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { login } from '../auth.api';
 import { AuthLayout } from '../components/auth-layout';
 export function SignInPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const client = useQueryClient();
+  const navigate = useNavigate();
   const mutation = useMutation({
     mutationFn: login,
     onSuccess: (user) => {
       client.setQueryData(['current-user'], user);
-      window.location.assign('/welcome');
+      void navigate('/', { replace: true });
     },
   });
   return (

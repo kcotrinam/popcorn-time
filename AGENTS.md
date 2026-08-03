@@ -31,9 +31,11 @@ Backend modules follow `Router → Controller → Service → Repository → Pri
 
 ## Current Phase and Task
 
-Phase 0 is complete: monorepo foundation, frontend and backend applications, PostgreSQL and Prisma, Docker Compose, Swagger/OpenAPI, and testing/quality tooling. Custom email/password authentication provides registration, verification, sign-in, protected routes, logout, and the welcome screen.
+Phase 0 is complete: monorepo foundation, frontend and backend applications, PostgreSQL and Prisma, Docker Compose, Swagger/OpenAPI, and testing/quality tooling. Custom email/password authentication provides registration, verification, sign-in, protected routes, logout, refresh sessions, password reset, CSRF protection, and the welcome screen.
 
-The current task is to create the internal `users` table and remove the temporary `AppMetadata` model. Read relevant files under `docs/` before implementing a task.
+The public landing page lives at `/` and must remain accessible to authenticated and unauthenticated users. It uses only local static mock poster assets and English copy for now, regardless of user language preferences. Its visual tokens must come from the Material UI theme palette; do not introduce hard-coded brand colors. Product-entry CTAs use `/sign-in` until their destination pages exist. After a successful sign-in, redirect to `/`; the navbar replaces sign-in/sign-up actions with the authenticated user's avatar.
+
+Read relevant files under `docs/` before implementing a task.
 
 ## Validation
 

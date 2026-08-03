@@ -10,8 +10,9 @@ import { SignUpPage } from '@/features/auth/pages/sign-up-page';
 import { WelcomePage } from '@/features/auth/pages/welcome-page';
 import { ProtectedRoute } from '@/features/auth/components/protected-route';
 import { PublicOnlyRoute } from '@/features/auth/components/public-only-route';
+import { LandingPage } from '@/features/landing/pages/landing-page';
 export const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/sign-in" replace /> },
+  { path: '/', element: <LandingPage /> },
   {
     path: '/sign-in',
     element: (
