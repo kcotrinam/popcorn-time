@@ -1,4 +1,5 @@
 import { ThemeProvider, createTheme } from '@mui/material';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -24,9 +25,11 @@ const item: CatalogCardModel = {
 function renderCard() {
   return render(
     <ThemeProvider theme={createTheme()}>
-      <MemoryRouter>
-        <CatalogCard item={item} />
-      </MemoryRouter>
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <CatalogCard item={item} />
+        </MemoryRouter>
+      </QueryClientProvider>
     </ThemeProvider>,
   );
 }
@@ -41,17 +44,46 @@ describe('CatalogCard', () => {
     );
   });
 
-  it('keeps the pending action unavailable without making a request', () => {
+  it('offers an enabled pending action', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     renderCard();
 
     expect(
       screen.getByRole('button', {
-        name: 'Add The Batman to pending, coming in your personal library',
+        name: 'Add The Batman to pending',
       }),
-    ).toBeDisabled();
+    ).toBeEnabled();
     expect(fetchSpy).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
+  });
+
+  it('shows a visual membership label instead of the add action for existing items', () => {
+    render(
+      <ThemeProvider theme={createTheme()}>
+        <QueryClientProvider client={new QueryClient()}>
+          <MemoryRouter>
+            <CatalogCard
+              item={item}
+              membership={{
+                externalId: item.externalId,
+                mediaType: item.mediaType,
+                status: 'WATCHLIST',
+                libraryItemId: '8a7ef9a5-89a3-4b31-b94b-1f5726ffb9ec',
+              }}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByText('In your library')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Add The Batman to pending' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Details for The Batman' })).toHaveAttribute(
+      'href',
+      '/explore/movie/123',
+    );
   });
 
   it('includes overlay action hooks for hover and keyboard focus behavior', () => {

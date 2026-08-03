@@ -6,10 +6,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CatalogPage } from '@popcorn-time/shared';
 import { ExplorePage } from './explore-page';
 import { getCatalog, getGenres } from '../catalog.api';
+import { getLibraryMemberships } from '../../library/library.api';
 
 vi.mock('../catalog.api', () => ({ getCatalog: vi.fn(), getGenres: vi.fn() }));
+vi.mock('../../library/library.api', () => ({ getLibraryMemberships: vi.fn() }));
 const catalog = getCatalog as ReturnType<typeof vi.fn>;
 const genres = getGenres as ReturnType<typeof vi.fn>;
+const memberships = getLibraryMemberships as ReturnType<typeof vi.fn>;
 const page: CatalogPage = {
   page: 1,
   totalPages: 2,
@@ -52,6 +55,7 @@ describe('ExplorePage', () => {
   it('uses discover for short searches and debounces valid searches', async () => {
     catalog.mockResolvedValue(page);
     genres.mockResolvedValue([]);
+    memberships.mockResolvedValue({ results: [] });
     renderPage();
     await waitFor(() => expect(catalog).toHaveBeenCalled());
     expect(catalog.mock.calls.at(-1)?.[0]).toMatchObject({ query: '', tab: 'all' });
@@ -77,6 +81,7 @@ describe('ExplorePage', () => {
   it('maps tabs and links cards to their detail page', async () => {
     catalog.mockResolvedValue(page);
     genres.mockResolvedValue([]);
+    memberships.mockResolvedValue({ results: [] });
     renderPage();
     expect(await screen.findByRole('link', { name: 'View poster for Arrival' })).toHaveAttribute(
       'href',
@@ -84,5 +89,16 @@ describe('ExplorePage', () => {
     );
     fireEvent.click(screen.getByRole('tab', { name: 'Anime' }));
     await waitFor(() => expect(catalog.mock.calls.at(-1)?.[0]).toMatchObject({ tab: 'anime' }));
+  });
+  it('uses one membership request for all visible cards', async () => {
+    catalog.mockResolvedValue(page);
+    genres.mockResolvedValue([]);
+    memberships.mockResolvedValue({ results: [] });
+    renderPage();
+    await waitFor(() => expect(memberships).toHaveBeenCalledTimes(1));
+    expect(memberships).toHaveBeenCalledWith(
+      [{ mediaType: 'movie', externalId: 42 }],
+      expect.any(AbortSignal),
+    );
   });
 });

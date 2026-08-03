@@ -16,6 +16,10 @@ Email-verification tokens and password-reset tokens are separate tables. They st
 
 TMDB catalog content is not copied into PostgreSQL during Phase 2. The API fetches, normalizes, and caches it at the application boundary. Future user-media relationships must persist stable `provider + externalId + mediaType` references rather than duplicating TMDB content rows.
 
+## Personal library
+
+`user_media` stores each user's private TMDB reference and a small display snapshot (title, poster, release year, and genre IDs). The `(user_id, provider, external_id, media_type)` unique key prevents duplicate ownership. User/status/created-date and user/media-type indexes support private listing and filtering without a local TMDB catalog.
+
 ## Migration history
 
 Create a new Prisma migration for every schema change. Never rewrite an applied migration; preserve migration history and inspect generated SQL before applying it.

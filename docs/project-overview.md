@@ -8,7 +8,8 @@ Popcorn Time is a family-oriented, multi-user media manager for movies, TV serie
 - Custom email/password authentication: registration, email verification, sign-in, protected routes, session refresh and rotation, sign-out, and password reset.
 - A public catalog API backed by TMDB. The Express API normalizes and caches catalog data; the browser never calls TMDB directly.
 - An authenticated Explore experience at `/explore`, including search, discovery filters, responsive catalog cards, and catalog detail pages at `/explore/:type/:id`.
+- A private `/library` for Pending and Watched TMDB references, with search, filters, sorting, pagination, view preference, status changes, and removal.
 
 ## Deferred scope
 
-The following are intentionally deferred: personal library, watched and watchlist status, ratings, private comments, recommendations, shared viewing plans, notifications, Google OAuth, a mobile app, and internationalization (i18n).
+The following are intentionally deferred: ratings, private comments, recommendations, shared viewing plans, notifications, Google OAuth, a mobile app, and internationalization (i18n).

@@ -33,10 +33,12 @@ export function getCatalog(request: CatalogRequest, signal?: AbortSignal): Promi
 }
 
 export const getGenres = async (type: CatalogMediaType, signal?: AbortSignal) =>
-  (await getJson<{ results: CatalogGenre[] }>('/catalog/genres', {
-    signal,
-    query: { type },
-  })).results;
+  (
+    await getJson<{ results: CatalogGenre[] }>('/catalog/genres', {
+      signal,
+      query: { type },
+    })
+  ).results;
 
 export const getCatalogDetail = (type: CatalogMediaType, id: number, signal?: AbortSignal) =>
   getJson<CatalogDetail>(`/catalog/${type}/${id}`, { signal });

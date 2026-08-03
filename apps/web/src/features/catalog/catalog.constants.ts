@@ -2,10 +2,7 @@ import type { CatalogMediaType } from '@popcorn-time/shared';
 
 export type ExploreTab = 'all' | 'movie' | 'tv' | 'anime' | 'documentary';
 export type CatalogSort =
-  | 'popularity.desc'
-  | 'popularity.asc'
-  | 'vote_average.desc'
-  | 'primary_release_date.desc';
+  'popularity.desc' | 'popularity.asc' | 'vote_average.desc' | 'primary_release_date.desc';
 
 export const exploreTabs: ReadonlyArray<{ value: ExploreTab; label: string }> = [
   { value: 'all', label: 'Todos' },

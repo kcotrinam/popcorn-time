@@ -12,7 +12,9 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/
 
 function requiresCsrf(path: string, method: string): boolean {
   return (
-    method !== 'GET' && method !== 'HEAD' && (path === '/auth/refresh' || path === '/auth/logout')
+    method !== 'GET' &&
+    method !== 'HEAD' &&
+    (path === '/auth/refresh' || path === '/auth/logout' || path.startsWith('/users/me/library'))
   );
 }
 
@@ -62,6 +64,9 @@ export const getJson = <T>(path: string, options: GetJsonOptions = {}) =>
   request<T>(withQuery(path, options.query), { signal: options.signal });
 export const postJson = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
+export const patchJson = <T>(path: string, body: unknown) =>
+  request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
+export const deleteJson = (path: string) => request<void>(path, { method: 'DELETE' });
 export const clearCsrfToken = () => {
   csrfToken = undefined;
 };

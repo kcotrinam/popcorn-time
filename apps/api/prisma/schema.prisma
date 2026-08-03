@@ -18,6 +18,11 @@ enum Theme {
   DARK
 }
 
+enum UserMediaStatus {
+  WATCHLIST
+  WATCHED
+}
+
 model User {
   id                 String            @id @default(uuid()) @db.Uuid
   email              String            @unique @db.VarChar(254)
@@ -38,9 +43,31 @@ model User {
   verificationTokens EmailVerificationToken[]
   passwordResetTokens PasswordResetToken[]
   externalIdentities ExternalIdentity[]
+  libraryItems       UserMedia[]
 
   @@index([deletedAt], map: "users_deleted_at_idx")
   @@map("users")
+}
+
+model UserMedia {
+  id          String          @id @default(uuid()) @db.Uuid
+  userId      String          @map("user_id") @db.Uuid
+  provider    String          @db.VarChar(50)
+  externalId  Int             @map("external_id")
+  mediaType   String          @map("media_type") @db.VarChar(16)
+  status      UserMediaStatus @default(WATCHLIST)
+  title       String          @db.VarChar(500)
+  posterUrl   String?         @map("poster_url")
+  releaseYear Int?            @map("release_year")
+  genreIds    Int[]           @default([]) @map("genre_ids")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, externalId, mediaType], map: "user_media_user_provider_external_type_key")
+  @@index([userId, status, createdAt], map: "user_media_user_status_created_at_idx")
+  @@index([userId, mediaType], map: "user_media_user_media_type_idx")
+  @@map("user_media")
 }
 
 model RefreshSession {

@@ -65,6 +65,126 @@ export const openapiSpec = {
         },
       },
     },
+    '/api/v1/users/me/library': {
+      get: {
+        summary: 'List the authenticated user library',
+        parameters: [
+          {
+            name: 'status',
+            in: 'query',
+            schema: { type: 'string', enum: ['WATCHLIST', 'WATCHED'] },
+          },
+          { name: 'mediaType', in: 'query', schema: { type: 'string', enum: ['movie', 'tv'] } },
+          { name: 'query', in: 'query', schema: { type: 'string' } },
+          { name: 'genreId', in: 'query', schema: { type: 'integer' } },
+          { name: 'year', in: 'query', schema: { type: 'integer' } },
+          {
+            name: 'sort',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['addedAt.desc', 'addedAt.asc', 'title.asc', 'releaseYear.desc'],
+            },
+          },
+          { name: 'page', in: 'query', schema: { type: 'integer' } },
+          { name: 'pageSize', in: 'query', schema: { type: 'integer', maximum: 50 } },
+        ],
+        responses: {
+          '200': { description: 'Paginated library items' },
+          '401': { description: 'Unauthenticated' },
+          '400': { description: 'Invalid query' },
+        },
+      },
+      post: {
+        summary: 'Add a TMDB item to the Pending library',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['provider', 'externalId', 'mediaType'],
+                properties: {
+                  provider: { type: 'string', enum: ['tmdb'] },
+                  externalId: { type: 'integer' },
+                  mediaType: { type: 'string', enum: ['movie', 'tv'] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Created' },
+          '200': { description: 'Already exists' },
+          '401': { description: 'Unauthenticated' },
+          '403': { description: 'CSRF failed' },
+          '400': { description: 'Invalid request' },
+        },
+      },
+    },
+    '/api/v1/users/me/library/membership': {
+      get: {
+        summary: 'Check authenticated user library membership for catalog items',
+        parameters: [
+          {
+            name: 'provider',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', enum: ['tmdb'] },
+          },
+          {
+            name: 'items',
+            in: 'query',
+            required: true,
+            description: 'Comma-separated media references, for example movie:123,tv:456',
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': { description: 'Matching user-owned library records only' },
+          '400': { description: 'Invalid or oversized media reference batch' },
+          '401': { description: 'Unauthenticated' },
+        },
+      },
+    },
+    '/api/v1/users/me/library/{id}': {
+      patch: {
+        summary: 'Update a library item status',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                properties: { status: { type: 'string', enum: ['WATCHLIST', 'WATCHED'] } },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Updated item' },
+          '401': { description: 'Unauthenticated' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not found' },
+        },
+      },
+      delete: {
+        summary: 'Remove a library item',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '204': { description: 'Removed' },
+          '401': { description: 'Unauthenticated' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not found' },
+        },
+      },
+    },
     '/api/v1/catalog/search': {
       get: {
         summary: 'Search the public catalog',

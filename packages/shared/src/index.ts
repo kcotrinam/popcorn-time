@@ -9,3 +9,12 @@ export type {
   CatalogPage,
   CatalogProvider,
 } from './contracts/catalog.js';
+export type {
+  CreateLibraryItemInput,
+  LibraryItem,
+  LibraryMembership,
+  LibraryMembershipResponse,
+  LibraryPage,
+  LibraryStatus,
+  UpdateLibraryItemInput,
+} from './contracts/library.js';

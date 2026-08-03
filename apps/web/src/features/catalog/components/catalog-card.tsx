@@ -1,14 +1,57 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
-import { alpha, Box, Button, Chip, Paper, Stack, Tooltip, Typography } from '@mui/material';
-import type { CatalogCard as CatalogCardModel } from '@popcorn-time/shared';
+import {
+  alpha,
+  Box,
+  Button,
+  Chip,
+  Paper,
+  Snackbar,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import type { CatalogCard as CatalogCardModel, LibraryMembership } from '@popcorn-time/shared';
 import { Link as RouterLink } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { addToLibrary } from '@/features/library/library.api';
 
 const mediaLabels = { movie: 'Movie', tv: 'Series' } as const;
 
-export function CatalogCard({ item }: { item: CatalogCardModel }) {
+export function CatalogCard({
+  item,
+  membership,
+}: {
+  item: CatalogCardModel;
+  membership?: LibraryMembership;
+}) {
   const detailPath = `/explore/${item.mediaType}/${item.externalId}`;
+  const queryClient = useQueryClient();
+  const [message, setMessage] = useState<string>();
+  const [justAdded, setJustAdded] = useState(false);
+  const isInLibrary = Boolean(membership || justAdded);
+  const add = useMutation({
+    mutationFn: () =>
+      addToLibrary({
+        provider: item.provider,
+        externalId: item.externalId,
+        mediaType: item.mediaType,
+      }),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ['library'] });
+      void queryClient.invalidateQueries({ queryKey: ['library-membership'] });
+      setJustAdded(true);
+      setMessage(
+        result.created
+          ? `${item.title} was added to Pending.`
+          : `${item.title} is already in your library.`,
+      );
+    },
+    onError: () => setMessage(`We could not add ${item.title}. Please try again.`),
+  });
 
   return (
     <Paper
@@ -113,42 +156,56 @@ export function CatalogCard({ item }: { item: CatalogCardModel }) {
           />
         ) : null}
 
+        {isInLibrary ? (
+          <Chip
+            icon={<CheckCircleRoundedIcon />}
+            label="In your library"
+            color="primary"
+            size="small"
+            sx={{
+              position: 'absolute',
+              zIndex: 3,
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              fontWeight: 700,
+              pointerEvents: 'none',
+            }}
+          />
+        ) : null}
+
         <Stack
           className="catalog-card-actions"
           spacing={1.25}
           sx={{
             position: 'absolute',
             zIndex: 2,
-            top: '50%',
+            top: isInLibrary ? 'calc(50% + 54px)' : '50%',
             right: 14,
             left: 14,
             opacity: 0,
-            transform: 'translateY(calc(-50% + 8px))',
+            transform: isInLibrary ? 'translateY(8px)' : 'translateY(calc(-50% + 8px))',
             transition: 'opacity 160ms ease, transform 160ms ease',
           }}
         >
-          <Tooltip title="Coming in your personal library" placement="top">
-            <Box component="span">
+          {!isInLibrary ? (
+            <Tooltip title="Add to your Pending library" placement="top">
               <Button
-                disabled
+                onClick={() => add.mutate()}
+                disabled={add.isPending}
                 fullWidth
                 startIcon={<AddRoundedIcon />}
                 variant="contained"
-                aria-label={`Add ${item.title} to pending, coming in your personal library`}
+                aria-label={`Add ${item.title} to pending`}
                 sx={{
                   minHeight: 44,
                   borderRadius: 1.5,
-                  '&.Mui-disabled': (theme) => ({
-                    bgcolor: alpha(theme.palette.primary.main, 0.72),
-                    color: alpha(theme.palette.primary.contrastText, 0.86),
-                    cursor: 'default',
-                  }),
                 }}
               >
-                Add to pending
+                {add.isPending ? 'Adding…' : 'Add to pending'}
               </Button>
-            </Box>
-          </Tooltip>
+            </Tooltip>
+          ) : null}
           <Button
             component={RouterLink}
             to={detailPath}
@@ -182,6 +239,12 @@ export function CatalogCard({ item }: { item: CatalogCardModel }) {
           {[item.releaseYear, mediaLabels[item.mediaType]].filter(Boolean).join(' · ')}
         </Typography>
       </Stack>
+      <Snackbar
+        open={Boolean(message)}
+        autoHideDuration={5000}
+        onClose={() => setMessage(undefined)}
+        message={message}
+      />
     </Paper>
   );
 }

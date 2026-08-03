@@ -7,12 +7,7 @@
 - **Phase 1 — Custom authentication and internal users:** email/password registration and verification, sessions, password reset, CSRF protection, and internal user persistence.
 - **Phase 2A — Public TMDB catalog backend:** normalized, cached, rate-limited search, discovery, genre, and detail endpoints.
 - **Phase 2B — Authenticated Explore frontend:** responsive app shell, catalog discovery and search, filters, cards, pagination, and catalog detail pages.
-
-## Next
-
-### Phase 3 — Personal library
-
-Add and remove media from a user's library, record `WATCHLIST` and `WATCHED` status, list and filter a user's library, and persist user-media references using stable catalog identifiers.
+- **Phase 3 — Personal library:** private TMDB references with Pending/Watched status, protected idempotent mutations, filtering and pagination API, and responsive library UI.
 
 ## Later phases
 
