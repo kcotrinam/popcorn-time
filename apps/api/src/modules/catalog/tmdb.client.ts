@@ -7,7 +7,6 @@ const baseUrl = 'https://api.themoviedb.org/3';
 export class TmdbNotFoundError extends Error {}
 export class TmdbClient {
   async get<T>(path: string, params: Record<string, string | number | undefined> = {}): Promise<T> {
-    console.log("ENV.TMDB_API_ACCESS_TOKEN", env.TMDB_API_ACCESS_TOKEN)
     if (!env.TMDB_API_ACCESS_TOKEN)
       throw new AppError(
         503,
