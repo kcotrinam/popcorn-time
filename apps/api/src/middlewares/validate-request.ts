@@ -22,7 +22,7 @@ export function validateRequest(schemas: {
             result.error.flatten(),
           ),
         );
-      Object.assign(req, { [key]: result.data });
+      if (key === 'body') req.body = result.data;
     }
     next();
   };

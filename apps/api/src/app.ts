@@ -13,6 +13,7 @@ import { requestId } from './middlewares/request-id.js';
 import { logger } from './lib/logger.js';
 import { createHealthRouter } from './modules/health/health.routes.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
+import { createCatalogRouter } from './modules/catalog/catalog.routes.js';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -28,6 +29,7 @@ export function createApp(): Express {
   );
   api.use(createHealthRouter());
   api.use(createAuthRouter());
+  api.use(createCatalogRouter());
   app.use(`/${env.API_PREFIX}`, api);
   app.get('/api/docs/openapi.json', (_req, res) => res.json(openapiSpec));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));

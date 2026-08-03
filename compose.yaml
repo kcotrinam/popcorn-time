@@ -24,6 +24,7 @@ services:
       CORS_ORIGIN: http://localhost:8080
       LOG_LEVEL: info
       DATABASE_URL: postgresql://${POSTGRES_USER:-popcorn_user}:${POSTGRES_PASSWORD:-change_me}@db:5432/${POSTGRES_DB:-popcorn_time}?schema=public
+      TMDB_API_ACCESS_TOKEN: ${TMDB_API_ACCESS_TOKEN:-}
     ports: ['${HOST_API_PORT:-3000}:3000']
     depends_on: { db: { condition: service_healthy } }
     networks: [popcorn]

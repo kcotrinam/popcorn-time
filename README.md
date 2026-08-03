@@ -63,9 +63,15 @@ packages/
 
 Popcorn Time uses its own email/password authentication. Accounts must verify their email before signing in. Passwords are Argon2id hashes; access and rotating refresh credentials are `Secure`, `HttpOnly`, `SameSite=Lax` cookies. Refresh-token reuse revokes that session family, and password resets revoke every active session. Configure Resend for verification and reset emails.
 
+## Public catalog
+
+The public catalog is served only through the API under `/api/v1/catalog`; the browser never receives the TMDB access token or raw TMDB responses. Set `TMDB_API_ACCESS_TOKEN` to a TMDB v4 read access token. Search, discovery, genres, and detail responses use short-lived in-memory caching. Streaming availability is not included in this phase.
+
+This product uses the TMDB API but is not endorsed or certified by TMDB.
+
 ## Environment variables
 
-`NODE_ENV`, `API_PORT`, `API_PREFIX`, `CORS_ORIGIN`, `LOG_LEVEL`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `WEB_URL`, cookie settings, `RESEND_API_KEY`, and `EMAIL_FROM` are validated by the API. PostgreSQL container setup additionally reads `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`. The web app reads `VITE_API_BASE_URL`. See `.env.example` for safe sample values.
+`NODE_ENV`, `API_PORT`, `API_PREFIX`, `CORS_ORIGIN`, `LOG_LEVEL`, `DATABASE_URL`, `JWT_ACCESS_SECRET`, `WEB_URL`, cookie settings, `RESEND_API_KEY`, `EMAIL_FROM`, and `TMDB_API_ACCESS_TOKEN` are validated by the API. PostgreSQL container setup additionally reads `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`. The web app reads `VITE_API_BASE_URL`. See `.env.example` for safe sample values.
 
 ## Prisma workflow
 

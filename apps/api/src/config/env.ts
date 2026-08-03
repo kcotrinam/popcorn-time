@@ -23,6 +23,7 @@ const envSchema = z.object({
     .transform((value) => value === 'true'),
   RESEND_API_KEY: z.string().default(''),
   EMAIL_FROM: z.string().trim().email().default('onboarding@resend.dev'),
+  TMDB_API_ACCESS_TOKEN: z.string().min(1).default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
