@@ -5,3 +5,5 @@ The public catalog follows `Router → Controller → Service → Provider/Repos
 For `discover?type=all`, movie and TV responses are queried separately and combined deterministically. Its pagination is an aggregation in v1 rather than a native TMDB page.
 
 The protected personal library follows `Router → Controller → Service → Repository → Prisma`. Creates resolve the trusted catalog snapshot through the catalog service before persisting a user-owned reference; reads authenticate the current session and mutations additionally use CSRF protection.
+
+The authenticated Home dashboard reads the same protected personal-library endpoint through independent client queries. A library query supplied in `/library?query=...` is an all-status search so results from both Pending and Watched are visible; ordinary library tabs continue to filter by their selected status.

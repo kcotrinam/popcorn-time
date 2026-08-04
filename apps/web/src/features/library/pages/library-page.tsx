@@ -36,6 +36,7 @@ import {
 } from '@mui/material';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { LibraryItem, LibraryStatus } from '@popcorn-time/shared';
 import { getGenres } from '@/features/catalog/catalog.api';
 import { useDebouncedValue } from '@/features/catalog/hooks/use-debounced-value';
@@ -150,8 +151,13 @@ export function LibraryPage() {
   const theme = useTheme();
   const mobile = useMediaQuery(theme.breakpoints.down('sm'));
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<LibraryStatus>('WATCHLIST');
-  const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  const urlQuery = searchParams.get('query')?.trim() ?? '';
+  const urlStatus = searchParams.get('status');
+  const [status, setStatus] = useState<LibraryStatus | 'ALL'>(() =>
+    urlQuery ? 'ALL' : urlStatus === 'WATCHED' ? 'WATCHED' : 'WATCHLIST',
+  );
+  const [search, setSearch] = useState(urlQuery);
   const deferredSearch = useDebouncedValue(search.trim());
   const [sort, setSort] = useState<LibraryFilters['sort']>('addedAt.desc');
   const [filters, setFilters] = useState(defaultDraft);
@@ -163,7 +169,14 @@ export function LibraryPage() {
     localStorage.getItem('popcorn-time-library-view') === 'list' ? 'list' : 'grid',
   );
   const request = useMemo(
-    () => ({ status, query: deferredSearch || undefined, sort, page, pageSize, ...filters }),
+    () => ({
+      status: status === 'ALL' ? undefined : status,
+      query: deferredSearch || undefined,
+      sort,
+      page,
+      pageSize,
+      ...filters,
+    }),
     [deferredSearch, filters, page, sort, status],
   );
   const library = useQuery({
@@ -203,6 +216,12 @@ export function LibraryPage() {
     },
   });
   useEffect(() => setPage(1), [status, deferredSearch, sort, filters]);
+  useEffect(() => {
+    if (urlQuery && urlQuery !== search) {
+      setSearch(urlQuery);
+      setStatus('ALL');
+    }
+  }, [search, urlQuery]);
   const setPreferredView = (_event: React.MouseEvent<HTMLElement>, next: View | null) => {
     if (!next) return;
     setView(next);
@@ -297,9 +316,10 @@ export function LibraryPage() {
         </Box>
         <Tabs
           value={status}
-          onChange={(_event, value: LibraryStatus) => setStatus(value)}
+          onChange={(_event, value: LibraryStatus | 'ALL') => setStatus(value)}
           aria-label="Library status"
         >
+          {deferredSearch ? <Tab value="ALL" label="All results" /> : null}
           <Tab value="WATCHLIST" label="Pending" />
           <Tab value="WATCHED" label="Watched" />
         </Tabs>
@@ -381,7 +401,9 @@ export function LibraryPage() {
         {library.data?.results.length === 0 ? (
           <Stack alignItems="center" spacing={1} py={8}>
             <Typography variant="h6">
-              Your {status === 'WATCHLIST' ? 'Pending' : 'Watched'} library is empty
+              {status === 'ALL'
+                ? 'No library results found'
+                : `Your ${status === 'WATCHLIST' ? 'Pending' : 'Watched'} library is empty`}
             </Typography>
             <Typography color="text.secondary">
               Add titles from Explore to build your library.

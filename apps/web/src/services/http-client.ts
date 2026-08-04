@@ -44,7 +44,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     ...init,
     credentials: 'include',
     headers: {
-      'content-type': 'application/json',
+      ...(init.body ? { 'content-type': 'application/json' } : {}),
       ...(csrfRequired ? { 'x-csrf-token': csrfToken ?? '' } : {}),
       ...init.headers,
     },

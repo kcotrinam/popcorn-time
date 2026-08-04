@@ -13,7 +13,7 @@ export function SignInPage() {
     mutationFn: login,
     onSuccess: (user) => {
       client.setQueryData(['current-user'], user);
-      void navigate('/', { replace: true });
+      void navigate('/home', { replace: true });
     },
   });
   return (

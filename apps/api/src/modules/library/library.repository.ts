@@ -17,8 +17,8 @@ export const libraryRepository = {
       },
     }),
   create: (data: Prisma.UserMediaUncheckedCreateInput) => prisma.userMedia.create({ data }),
-  updateStatus: (id: string, status: UserMediaStatus) =>
-    prisma.userMedia.update({ where: { id }, data: { status } }),
+  updateStatus: (id: string, status: UserMediaStatus, watchedAt: Date | null) =>
+    prisma.userMedia.update({ where: { id }, data: { status, watchedAt } }),
   delete: (id: string) => prisma.userMedia.delete({ where: { id } }),
   findMemberships: (userId: string, query: LibraryMembershipQuery) =>
     prisma.userMedia.findMany({
@@ -48,7 +48,9 @@ export const libraryRepository = {
           ? { title: 'asc' }
           : query.sort === 'releaseYear.desc'
             ? { releaseYear: 'desc' }
-            : { createdAt: 'desc' };
+            : query.sort === 'watchedAt.desc'
+              ? { watchedAt: 'desc' }
+              : { createdAt: 'desc' };
     return prisma.$transaction([
       prisma.userMedia.findMany({
         where,

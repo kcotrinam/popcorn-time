@@ -28,7 +28,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '@/features/auth/auth.api';
 
 const items = [
-  { label: 'Home', icon: <HomeRoundedIcon /> },
+  { label: 'Home', icon: <HomeRoundedIcon />, to: '/home' },
   { label: 'Explore', icon: <MovieFilterRoundedIcon />, to: '/explore' },
   { label: 'My Library', icon: <VideoLibraryRoundedIcon />, to: '/library' },
   { label: 'Shared', icon: <PeopleOutlineRoundedIcon /> },
@@ -128,6 +128,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           >
             <Button
               component={RouterLink}
+              to="/home"
+              startIcon={<HomeRoundedIcon />}
+              sx={{ minHeight: 64, fontSize: '0.7rem' }}
+            >
+              Home
+            </Button>
+            <Button
+              component={RouterLink}
               to="/explore"
               startIcon={<MovieFilterRoundedIcon />}
               sx={{ minHeight: 64, fontSize: '0.7rem' }}
@@ -141,13 +149,6 @@ export function AppShell({ children }: { children: ReactNode }) {
               sx={{ minHeight: 64, fontSize: '0.7rem' }}
             >
               Library
-            </Button>
-            <Button
-              disabled
-              startIcon={<PeopleOutlineRoundedIcon />}
-              sx={{ minHeight: 64, fontSize: '0.7rem' }}
-            >
-              Shared
             </Button>
             <Button
               onClick={() => setMoreOpen(true)}

@@ -8,11 +8,11 @@ import type {
 import { deleteJson, getJson, patchJson, postJson, type QueryParams } from '@/services/http-client';
 
 export type LibraryFilters = {
-  status: LibraryStatus;
+  status?: LibraryStatus;
   query?: string;
   genreId?: number;
   year?: number;
-  sort: 'addedAt.desc' | 'addedAt.asc' | 'title.asc' | 'releaseYear.desc';
+  sort: 'addedAt.desc' | 'addedAt.asc' | 'title.asc' | 'releaseYear.desc' | 'watchedAt.desc';
   page: number;
   pageSize: number;
 };

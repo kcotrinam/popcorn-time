@@ -60,12 +60,14 @@ model UserMedia {
   posterUrl   String?         @map("poster_url")
   releaseYear Int?            @map("release_year")
   genreIds    Int[]           @default([]) @map("genre_ids")
+  watchedAt   DateTime?       @map("watched_at")
   createdAt   DateTime        @default(now()) @map("created_at")
   updatedAt   DateTime        @updatedAt @map("updated_at")
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, provider, externalId, mediaType], map: "user_media_user_provider_external_type_key")
   @@index([userId, status, createdAt], map: "user_media_user_status_created_at_idx")
+  @@index([userId, status, watchedAt], map: "user_media_user_status_watched_at_idx")
   @@index([userId, mediaType], map: "user_media_user_media_type_idx")
   @@map("user_media")
 }

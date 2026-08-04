@@ -11,6 +11,7 @@ export type LibraryItem = {
   posterUrl: string | null;
   releaseYear: number | null;
   genreIds: number[];
+  watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
 };

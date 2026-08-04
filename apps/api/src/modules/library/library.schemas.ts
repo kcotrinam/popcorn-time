@@ -23,7 +23,7 @@ export const libraryQuerySchema = z.object({
     .max(new Date().getFullYear() + 1)
     .optional(),
   sort: z
-    .enum(['addedAt.desc', 'addedAt.asc', 'title.asc', 'releaseYear.desc'])
+    .enum(['addedAt.desc', 'addedAt.asc', 'title.asc', 'releaseYear.desc', 'watchedAt.desc'])
     .default('addedAt.desc'),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(24),

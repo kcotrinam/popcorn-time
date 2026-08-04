@@ -20,6 +20,7 @@ type UserMediaSnapshot = {
   posterUrl: string | null;
   releaseYear: number | null;
   genreIds: number[];
+  watchedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -34,6 +35,7 @@ const toItem = (item: UserMediaSnapshot): LibraryItem => ({
   posterUrl: item.posterUrl,
   releaseYear: item.releaseYear,
   genreIds: item.genreIds,
+  watchedAt: item.watchedAt?.toISOString() ?? null,
   createdAt: item.createdAt.toISOString(),
   updatedAt: item.updatedAt.toISOString(),
 });
@@ -85,7 +87,13 @@ export const libraryService = {
   async update(userId: string, params: LibraryItemParams, input: UpdateLibraryItemInput) {
     const item = await libraryRepository.findOwned(userId, params.id);
     if (!item) throw new AppError(404, ErrorCode.NOT_FOUND, 'Library item was not found');
-    return toItem(await libraryRepository.updateStatus(item.id, input.status));
+    const watchedAt =
+      input.status === item.status
+        ? item.watchedAt
+        : input.status === 'WATCHED'
+          ? new Date()
+          : null;
+    return toItem(await libraryRepository.updateStatus(item.id, input.status, watchedAt));
   },
   async remove(userId: string, params: LibraryItemParams) {
     const item = await libraryRepository.findOwned(userId, params.id);
