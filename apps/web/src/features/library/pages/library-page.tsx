@@ -1,4 +1,5 @@
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
 import ListRoundedIcon from '@mui/icons-material/ListRounded';
@@ -22,6 +23,7 @@ import {
   MenuItem,
   Pagination,
   Select,
+  Slider,
   Stack,
   Tab,
   Tabs,
@@ -46,6 +48,8 @@ import {
 
 type View = 'grid' | 'list';
 const pageSize = 24;
+const minimumReleaseYear = 1888;
+const maximumReleaseYear = new Date().getFullYear() + 1;
 const defaultDraft = {
   genreId: undefined as number | undefined,
   year: undefined as number | undefined,
@@ -210,7 +214,12 @@ export function LibraryPage() {
   };
   const filterPanel = (
     <Stack spacing={3} sx={{ width: { xs: 'auto', sm: 340 }, p: 3, height: '100%' }}>
-      <Typography variant="h6">Filters</Typography>
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Typography variant="h6">Filters</Typography>
+        <IconButton aria-label="Close filters" onClick={() => setDrawer(false)} edge="end">
+          <CloseRoundedIcon />
+        </IconButton>
+      </Stack>
       <FormControl fullWidth>
         <InputLabel id="library-genre-label">Genre</InputLabel>
         <Select
@@ -232,19 +241,35 @@ export function LibraryPage() {
           ))}
         </Select>
       </FormControl>
-      <TextField
-        label="Release year"
-        value={draft.year ?? ''}
-        onChange={(event) =>
-          setDraft((value) => ({
-            ...value,
-            year: event.target.value ? Number(event.target.value) : undefined,
-          }))
-        }
-        slotProps={{
-          htmlInput: { inputMode: 'numeric', min: 1888, max: new Date().getFullYear() + 1 },
-        }}
-      />
+      <Box>
+        <Stack direction="row" justifyContent="space-between" alignItems="baseline" mb={1}>
+          <Typography id="library-release-year-label" variant="subtitle2">
+            Release year
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {draft.year ?? 'Any year'}
+          </Typography>
+        </Stack>
+        <Slider
+          aria-labelledby="library-release-year-label"
+          value={draft.year ?? maximumReleaseYear}
+          min={minimumReleaseYear}
+          max={maximumReleaseYear}
+          step={1}
+          valueLabelDisplay={draft.year === undefined ? 'off' : 'auto'}
+          onChange={(_event, value) =>
+            setDraft((current) => ({ ...current, year: value as number }))
+          }
+        />
+        <Stack direction="row" justifyContent="space-between">
+          <Typography variant="caption" color="text.secondary">
+            {minimumReleaseYear}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {maximumReleaseYear}
+          </Typography>
+        </Stack>
+      </Box>
       <Box flexGrow={1} />
       <Button variant="contained" onClick={apply}>
         Apply filters
