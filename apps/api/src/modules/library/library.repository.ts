@@ -39,6 +39,7 @@ export const libraryRepository = {
       ...(query.mediaType ? { mediaType: query.mediaType } : {}),
       ...(query.query ? { title: { contains: query.query, mode: 'insensitive' } } : {}),
       ...(query.genreId ? { genreIds: { has: query.genreId } } : {}),
+      ...(query.categories?.length ? { manualCategories: { hasSome: query.categories } } : {}),
       ...(query.year ? { releaseYear: query.year } : {}),
     };
     const orderBy: Prisma.UserMediaOrderByWithRelationInput =

@@ -1,16 +1,23 @@
 import type { CatalogMediaType, CatalogProvider } from './catalog.js';
 
 export type LibraryStatus = 'WATCHLIST' | 'WATCHED';
+export type ManualCategory = 'Anime' | 'Documentary' | 'Experimental' | 'Indie' | 'Family';
+export type LibraryProvider = CatalogProvider | 'manual';
 export type LibraryItem = {
   id: string;
-  provider: CatalogProvider;
-  externalId: number;
+  provider: LibraryProvider;
+  externalId: number | null;
   mediaType: CatalogMediaType;
   status: LibraryStatus;
   title: string;
+  originalTitle: string | null;
+  originalLanguage: string | null;
+  nationality: string | null;
+  synopsis: string | null;
   posterUrl: string | null;
   releaseYear: number | null;
   genreIds: number[];
+  manualCategories: ManualCategory[];
   watchedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -26,6 +33,18 @@ export type CreateLibraryItemInput = {
   provider: CatalogProvider;
   externalId: number;
   mediaType: CatalogMediaType;
+};
+export type CreateManualLibraryItemInput = {
+  title: string;
+  originalTitle?: string;
+  mediaType: CatalogMediaType;
+  releaseYear?: number;
+  originalLanguage?: string;
+  nationality?: string;
+  synopsis?: string;
+  posterUrl?: string;
+  categories: ManualCategory[];
+  status: LibraryStatus;
 };
 export type UpdateLibraryItemInput = { status: LibraryStatus };
 export type LibraryMembership = {

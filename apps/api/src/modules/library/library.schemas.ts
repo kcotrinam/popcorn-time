@@ -2,6 +2,13 @@ import { z } from 'zod';
 
 const mediaType = z.enum(['movie', 'tv']);
 const status = z.enum(['WATCHLIST', 'WATCHED']);
+export const manualCategorySchema = z.enum([
+  'Anime',
+  'Documentary',
+  'Experimental',
+  'Indie',
+  'Family',
+]);
 export const createLibraryItemSchema = z
   .object({
     provider: z.literal('tmdb'),
@@ -10,12 +17,50 @@ export const createLibraryItemSchema = z
   })
   .strict();
 export const updateLibraryItemSchema = z.object({ status }).strict();
+const optionalText = (maxLength: number) =>
+  z
+    .string()
+    .trim()
+    .max(maxLength)
+    .optional()
+    .transform((value) => value || undefined);
+export const createManualLibraryItemSchema = z
+  .object({
+    title: z.string().trim().min(1).max(500),
+    originalTitle: optionalText(500),
+    mediaType,
+    releaseYear: z.coerce
+      .number()
+      .int()
+      .min(1888)
+      .max(new Date().getFullYear() + 1)
+      .optional(),
+    originalLanguage: optionalText(100),
+    nationality: optionalText(100),
+    synopsis: optionalText(5000),
+    posterUrl: z
+      .string()
+      .trim()
+      .url()
+      .refine((value) => new URL(value).protocol === 'https:', 'Poster URL must use HTTPS')
+      .optional()
+      .transform((value) => value || undefined),
+    categories: z.array(manualCategorySchema).max(5),
+    status,
+  })
+  .strict();
 export const libraryItemParamsSchema = z.object({ id: z.uuid() });
 export const libraryQuerySchema = z.object({
   status: status.optional(),
   mediaType: mediaType.optional(),
   query: z.string().trim().min(1).max(100).optional(),
   genreId: z.coerce.number().int().positive().optional(),
+  categories: z
+    .string()
+    .min(1)
+    .transform((value) => value.split(','))
+    .pipe(z.array(manualCategorySchema).min(1).max(5))
+    .optional(),
   year: z.coerce
     .number()
     .int()
@@ -50,6 +95,7 @@ export const libraryMembershipQuerySchema = z
       context.addIssue({ code: 'custom', message: 'Duplicate media references are not allowed' });
   });
 export type CreateLibraryItemInput = z.infer<typeof createLibraryItemSchema>;
+export type CreateManualLibraryItemInput = z.infer<typeof createManualLibraryItemSchema>;
 export type UpdateLibraryItemInput = z.infer<typeof updateLibraryItemSchema>;
 export type LibraryItemParams = z.infer<typeof libraryItemParamsSchema>;
 export type LibraryQuery = z.infer<typeof libraryQuerySchema>;

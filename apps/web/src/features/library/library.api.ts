@@ -1,5 +1,6 @@
 import type {
   CreateLibraryItemInput,
+  CreateManualLibraryItemInput,
   LibraryItem,
   LibraryMembershipResponse,
   LibraryPage,
@@ -12,14 +13,22 @@ export type LibraryFilters = {
   query?: string;
   genreId?: number;
   year?: number;
+  categories?: string[];
   sort: 'addedAt.desc' | 'addedAt.asc' | 'title.asc' | 'releaseYear.desc' | 'watchedAt.desc';
   page: number;
   pageSize: number;
 };
-export const getLibrary = (filters: LibraryFilters, signal?: AbortSignal) =>
-  getJson<LibraryPage>('/users/me/library', { signal, query: filters as QueryParams });
+export const getLibrary = (filters: LibraryFilters, signal?: AbortSignal) => {
+  const { categories, ...rest } = filters;
+  return getJson<LibraryPage>('/users/me/library', {
+    signal,
+    query: { ...rest, categories: categories?.join(',') } as QueryParams,
+  });
+};
 export const addToLibrary = (input: CreateLibraryItemInput) =>
   postJson<{ item: LibraryItem; created: boolean }>('/users/me/library', input);
+export const addManualToLibrary = (input: CreateManualLibraryItemInput) =>
+  postJson<{ item: LibraryItem; created: boolean }>('/users/me/library/manual', input);
 export type LibraryMembershipReference = Pick<CreateLibraryItemInput, 'externalId' | 'mediaType'>;
 export const getLibraryMemberships = (items: LibraryMembershipReference[], signal?: AbortSignal) =>
   getJson<LibraryMembershipResponse>('/users/me/library/membership', {

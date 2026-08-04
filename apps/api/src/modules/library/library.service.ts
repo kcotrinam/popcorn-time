@@ -5,6 +5,7 @@ import { catalogService } from '../catalog/catalog.service.js';
 import { libraryRepository } from './library.repository.js';
 import type {
   CreateLibraryItemInput,
+  CreateManualLibraryItemInput,
   LibraryItemParams,
   LibraryMembershipQuery,
   LibraryQuery,
@@ -13,13 +14,19 @@ import type {
 
 type UserMediaSnapshot = {
   id: string;
-  externalId: number;
+  provider: string;
+  externalId: number | null;
   mediaType: string;
   status: LibraryItem['status'];
   title: string;
+  originalTitle: string | null;
+  originalLanguage: string | null;
+  nationality: string | null;
+  synopsis: string | null;
   posterUrl: string | null;
   releaseYear: number | null;
   genreIds: number[];
+  manualCategories: string[];
   watchedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -27,14 +34,19 @@ type UserMediaSnapshot = {
 
 const toItem = (item: UserMediaSnapshot): LibraryItem => ({
   id: item.id,
-  provider: 'tmdb',
+  provider: item.provider as LibraryItem['provider'],
   externalId: item.externalId,
   mediaType: item.mediaType as LibraryItem['mediaType'],
   status: item.status,
   title: item.title,
+  originalTitle: item.originalTitle,
+  originalLanguage: item.originalLanguage,
+  nationality: item.nationality,
+  synopsis: item.synopsis,
   posterUrl: item.posterUrl,
   releaseYear: item.releaseYear,
   genreIds: item.genreIds,
+  manualCategories: item.manualCategories as LibraryItem['manualCategories'],
   watchedAt: item.watchedAt?.toISOString() ?? null,
   createdAt: item.createdAt.toISOString(),
   updatedAt: item.updatedAt.toISOString(),
@@ -60,6 +72,28 @@ export const libraryService = {
     });
     return { item: toItem(item), created: true };
   },
+  async createManual(userId: string, input: CreateManualLibraryItemInput): Promise<LibraryItem> {
+    const watchedAt = input.status === 'WATCHED' ? new Date() : null;
+    return toItem(
+      await libraryRepository.create({
+        userId,
+        provider: 'manual',
+        externalId: null,
+        mediaType: input.mediaType,
+        status: input.status,
+        title: input.title,
+        originalTitle: input.originalTitle ?? null,
+        originalLanguage: input.originalLanguage ?? null,
+        nationality: input.nationality ?? null,
+        synopsis: input.synopsis ?? null,
+        posterUrl: input.posterUrl ?? null,
+        releaseYear: input.releaseYear ?? null,
+        genreIds: [],
+        manualCategories: input.categories,
+        watchedAt,
+      }),
+    );
+  },
   async list(userId: string, query: LibraryQuery): Promise<LibraryPage> {
     const [items, totalResults] = await libraryRepository.list(userId, query);
     return {
@@ -78,7 +112,7 @@ export const libraryService = {
     return {
       results: items.map((item) => ({
         libraryItemId: item.id,
-        externalId: item.externalId,
+        externalId: item.externalId as number,
         mediaType: item.mediaType as LibraryItem['mediaType'],
         status: item.status,
       })),

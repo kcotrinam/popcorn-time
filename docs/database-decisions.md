@@ -18,7 +18,7 @@ TMDB catalog content is not copied into PostgreSQL during Phase 2. The API fetch
 
 ## Personal library
 
-`user_media` stores each user's private TMDB reference and a small display snapshot (title, poster, release year, and genre IDs). The `(user_id, provider, external_id, media_type)` unique key prevents duplicate ownership. `watched_at` records when an item most recently transitions to Watched and is cleared if it returns to Pending. User/status/created-date, user/status/watched-date, and user/media-type indexes support private listing, filtering, and recent-history queries without a local TMDB catalog.
+`user_media` stores each user's private TMDB reference and a small display snapshot (title, poster, release year, and genre IDs). The `(user_id, provider, external_id, media_type)` unique key prevents duplicate TMDB ownership. It also stores owner-private manual records, whose provider is `manual`, whose external reference is absent, and whose optional metadata and fixed categories are stored on the same row. A database check preserves the TMDB external-reference requirement and limits manual categories to the fixed product set. `watched_at` records when an item most recently transitions to Watched and is cleared if it returns to Pending. User/status/created-date, user/status/watched-date, user/media-type, and manual-category indexes support private listing, filtering, and recent-history queries without a local TMDB catalog.
 
 ## Migration history
 

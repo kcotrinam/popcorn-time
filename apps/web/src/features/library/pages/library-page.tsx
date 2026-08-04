@@ -37,7 +37,7 @@ import {
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { LibraryItem, LibraryStatus } from '@popcorn-time/shared';
+import type { LibraryItem, LibraryStatus, ManualCategory } from '@popcorn-time/shared';
 import { getGenres } from '@/features/catalog/catalog.api';
 import { useDebouncedValue } from '@/features/catalog/hooks/use-debounced-value';
 import {
@@ -54,7 +54,15 @@ const maximumReleaseYear = new Date().getFullYear() + 1;
 const defaultDraft = {
   genreId: undefined as number | undefined,
   year: undefined as number | undefined,
+  categories: [] as ManualCategory[],
 };
+const manualCategories: ManualCategory[] = [
+  'Anime',
+  'Documentary',
+  'Experimental',
+  'Indie',
+  'Family',
+];
 const sorts = [
   ['addedAt.desc', 'Recently added'],
   ['addedAt.asc', 'Oldest added'],
@@ -74,6 +82,7 @@ function LibraryCard({
   onRemove: (item: LibraryItem) => void;
 }) {
   const next = item.status === 'WATCHLIST' ? 'WATCHED' : 'WATCHLIST';
+  const [posterFailed, setPosterFailed] = useState(false);
   return (
     <Box
       component="article"
@@ -96,12 +105,13 @@ function LibraryCard({
           bgcolor: 'background.default',
         }}
       >
-        {item.posterUrl ? (
+        {item.posterUrl && !posterFailed ? (
           <Box
             component="img"
             src={item.posterUrl}
             alt={`Poster for ${item.title}`}
             loading="lazy"
+            onError={() => setPosterFailed(true)}
             sx={{ width: '100%', height: '100%', display: 'block', objectFit: 'cover' }}
           />
         ) : (
@@ -129,6 +139,9 @@ function LibraryCard({
           />
           <Chip label="Shared" size="small" variant="outlined" />
           <Chip label="Recommended" size="small" variant="outlined" />
+          {item.manualCategories.map((category) => (
+            <Chip key={category} label={category} size="small" variant="outlined" />
+          ))}
         </Stack>
         <Stack direction="row" spacing={1} sx={{ mt: 'auto' }}>
           <Button size="small" onClick={() => onStatus(item)}>
@@ -260,6 +273,30 @@ export function LibraryPage() {
           ))}
         </Select>
       </FormControl>
+      <Box>
+        <Typography variant="subtitle2" gutterBottom>
+          Manual categories
+        </Typography>
+        <Stack direction="row" useFlexGap flexWrap="wrap" spacing={1}>
+          {manualCategories.map((category) => (
+            <Chip
+              key={category}
+              label={category}
+              clickable
+              color={draft.categories.includes(category) ? 'primary' : 'default'}
+              variant={draft.categories.includes(category) ? 'filled' : 'outlined'}
+              onClick={() =>
+                setDraft((current) => ({
+                  ...current,
+                  categories: current.categories.includes(category)
+                    ? current.categories.filter((value) => value !== category)
+                    : [...current.categories, category],
+                }))
+              }
+            />
+          ))}
+        </Stack>
+      </Box>
       <Box>
         <Stack direction="row" justifyContent="space-between" alignItems="baseline" mb={1}>
           <Typography id="library-release-year-label" variant="subtitle2">

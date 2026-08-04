@@ -11,10 +11,13 @@ export type {
 } from './contracts/catalog.js';
 export type {
   CreateLibraryItemInput,
+  CreateManualLibraryItemInput,
   LibraryItem,
+  LibraryProvider,
   LibraryMembership,
   LibraryMembershipResponse,
   LibraryPage,
   LibraryStatus,
+  ManualCategory,
   UpdateLibraryItemInput,
 } from './contracts/library.js';

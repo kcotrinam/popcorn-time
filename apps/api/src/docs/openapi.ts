@@ -77,6 +77,12 @@ export const openapiSpec = {
           { name: 'mediaType', in: 'query', schema: { type: 'string', enum: ['movie', 'tv'] } },
           { name: 'query', in: 'query', schema: { type: 'string' } },
           { name: 'genreId', in: 'query', schema: { type: 'integer' } },
+          {
+            name: 'categories',
+            in: 'query',
+            description: 'Comma-separated manual categories; matching uses OR semantics.',
+            schema: { type: 'string', example: 'Anime,Family' },
+          },
           { name: 'year', in: 'query', schema: { type: 'integer' } },
           {
             name: 'sort',
@@ -116,6 +122,46 @@ export const openapiSpec = {
         responses: {
           '201': { description: 'Created' },
           '200': { description: 'Already exists' },
+          '401': { description: 'Unauthenticated' },
+          '403': { description: 'CSRF failed' },
+          '400': { description: 'Invalid request' },
+        },
+      },
+    },
+    '/api/v1/users/me/library/manual': {
+      post: {
+        summary: 'Add private manual content to the authenticated user library',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title', 'mediaType', 'categories', 'status'],
+                properties: {
+                  title: { type: 'string', maxLength: 500 },
+                  originalTitle: { type: 'string', maxLength: 500 },
+                  mediaType: { type: 'string', enum: ['movie', 'tv'] },
+                  releaseYear: { type: 'integer' },
+                  originalLanguage: { type: 'string' },
+                  nationality: { type: 'string' },
+                  synopsis: { type: 'string', maxLength: 5000 },
+                  posterUrl: { type: 'string', format: 'uri', pattern: '^https://' },
+                  categories: {
+                    type: 'array',
+                    items: {
+                      type: 'string',
+                      enum: ['Anime', 'Documentary', 'Experimental', 'Indie', 'Family'],
+                    },
+                  },
+                  status: { type: 'string', enum: ['WATCHLIST', 'WATCHED'] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Created private manual library item' },
           '401': { description: 'Unauthenticated' },
           '403': { description: 'CSRF failed' },
           '400': { description: 'Invalid request' },

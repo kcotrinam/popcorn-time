@@ -59,7 +59,9 @@ describe('HomePage', () => {
     );
     expect(screen.getByText('No recommendations for you yet.')).toBeInTheDocument();
     expect(screen.getByText('No shared plans with you.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Add manually' })).toBeDisabled();
+    expect(
+      screen.getByRole('link', { name: 'Register content not found in the catalog' }),
+    ).toHaveAttribute('href', '/library/manual');
   });
 
   it('submits a library-only search to the Library route', async () => {

@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '@/features/auth/auth.api';
 import { getLibrary } from '@/features/library/library.api';
 import { DashboardLibraryCard } from '../components/dashboard-library-card';
@@ -137,17 +137,16 @@ export function HomePage() {
           />
         </DashboardSection>
       </Stack>
-      <Tooltip title="Coming soon">
-        <span>
-          <Button
-            disabled
-            variant="contained"
-            startIcon={<AddRoundedIcon />}
-            sx={{ position: 'fixed', right: { xs: 16, md: 32 }, bottom: { xs: 88, md: 32 } }}
-          >
-            Add manually
-          </Button>
-        </span>
+      <Tooltip title="Register content not found in the catalog">
+        <Button
+          component={RouterLink}
+          to="/library/manual"
+          variant="contained"
+          startIcon={<AddRoundedIcon />}
+          sx={{ position: 'fixed', right: { xs: 16, md: 32 }, bottom: { xs: 88, md: 32 } }}
+        >
+          Register manually
+        </Button>
       </Tooltip>
     </Container>
   );

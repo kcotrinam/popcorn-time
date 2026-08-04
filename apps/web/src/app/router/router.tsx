@@ -15,6 +15,7 @@ import { AppShell } from '@/features/catalog/components/app-shell';
 import { ExplorePage } from '@/features/catalog/pages/explore-page';
 import { CatalogDetailPage } from '@/features/catalog/pages/catalog-detail-page';
 import { LibraryPage } from '@/features/library/pages/library-page';
+import { ManualRegistrationPage } from '@/features/library/pages/manual-registration-page';
 import { HomePage } from '@/features/home/pages/home-page';
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
@@ -71,6 +72,16 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AppShell>
           <LibraryPage />
+        </AppShell>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/library/manual',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <ManualRegistrationPage />
         </AppShell>
       </ProtectedRoute>
     ),

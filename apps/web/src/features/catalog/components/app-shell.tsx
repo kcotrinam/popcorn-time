@@ -70,7 +70,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </Typography>
       <Menu />
       <Box flexGrow={1} />
-      <Button variant="contained" startIcon={<AddRoundedIcon />} disabled fullWidth>
+      <Button
+        component={RouterLink}
+        to="/library/manual"
+        variant="contained"
+        startIcon={<AddRoundedIcon />}
+        fullWidth
+      >
         Add content
       </Button>
       <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 2, px: 1 }}>

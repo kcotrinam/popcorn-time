@@ -5,6 +5,7 @@ import { validateRequest } from '../../middlewares/validate-request.js';
 import { libraryController } from './library.controller.js';
 import {
   createLibraryItemSchema,
+  createManualLibraryItemSchema,
   libraryItemParamsSchema,
   libraryMembershipQuerySchema,
   libraryQuerySchema,
@@ -31,6 +32,13 @@ export function createLibraryRouter(): RouterType {
     csrfProtection,
     validateRequest({ body: createLibraryItemSchema }),
     libraryController.create,
+  );
+  router.post(
+    '/users/me/library/manual',
+    requireAuthentication,
+    csrfProtection,
+    validateRequest({ body: createManualLibraryItemSchema }),
+    libraryController.createManual,
   );
   router.patch(
     '/users/me/library/:id',
