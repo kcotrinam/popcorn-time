@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { CreateManualLibraryItemInput, ManualCategory } from '@popcorn-time/shared';
+import { HttpError } from '@/services/http-client';
 import { addManualToLibrary } from '../library.api';
 
 const categories: ManualCategory[] = ['Anime', 'Documentary', 'Experimental', 'Indie', 'Family'];
@@ -25,6 +26,26 @@ const isHttpsUrl = (value: string) => {
     return false;
   }
 };
+const isExactMatchDetails = (
+  details: unknown,
+): details is { mediaType: 'movie' | 'tv'; externalId: number } =>
+  typeof details === 'object' &&
+  details !== null &&
+  'mediaType' in details &&
+  'externalId' in details &&
+  ((details as { mediaType: unknown }).mediaType === 'movie' ||
+    (details as { mediaType: unknown }).mediaType === 'tv') &&
+  typeof (details as { externalId: unknown }).externalId === 'number';
+const isAmbiguousMatchDetails = (
+  details: unknown,
+): details is { query: string; mediaType: 'movie' | 'tv' } =>
+  typeof details === 'object' &&
+  details !== null &&
+  'query' in details &&
+  'mediaType' in details &&
+  typeof (details as { query: unknown }).query === 'string' &&
+  ((details as { mediaType: unknown }).mediaType === 'movie' ||
+    (details as { mediaType: unknown }).mediaType === 'tv');
 
 export function ManualRegistrationPage() {
   const navigate = useNavigate();
@@ -69,7 +90,27 @@ export function ManualRegistrationPage() {
       setNotice('Content saved to your library.');
       window.setTimeout(() => void navigate('/library'), 500);
     },
-    onError: () => setNotice('We could not save this content. Please try again.'),
+    onError: (error) => {
+      if (!(error instanceof HttpError)) {
+        setNotice('We could not save this content. Please try again.');
+        return;
+      }
+      if (error.code === 'CATALOG_EXACT_MATCH' && isExactMatchDetails(error.details)) {
+        void navigate(`/explore/${error.details.mediaType}/${error.details.externalId}`);
+        return;
+      }
+      if (error.code === 'CATALOG_AMBIGUOUS_MATCH' && isAmbiguousMatchDetails(error.details)) {
+        void navigate(
+          `/explore?query=${encodeURIComponent(error.details.query)}&type=${error.details.mediaType}`,
+        );
+        return;
+      }
+      if (error.status === 503) {
+        setNotice('TMDB could not be verified. Please try again.');
+        return;
+      }
+      setNotice('We could not save this content. Please try again.');
+    },
   });
   const submit = (status: CreateManualLibraryItemInput['status']) => (event: FormEvent) => {
     event.preventDefault();

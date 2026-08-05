@@ -35,12 +35,17 @@ export const errorHandler: ErrorRequestHandler = (error: unknown, req, res, _nex
     !appError.isOperational && env.NODE_ENV === 'production'
       ? 'An unexpected error occurred'
       : appError.message;
+  const navigationConflict =
+    appError.code === ErrorCode.CATALOG_EXACT_MATCH ||
+    appError.code === ErrorCode.CATALOG_AMBIGUOUS_MATCH;
   res.status(appError.statusCode).json({
     error: {
       code: appError.code,
       message,
       requestId: req.requestId,
-      ...(appError.details && env.NODE_ENV !== 'production' ? { details: appError.details } : {}),
+      ...(appError.details && (env.NODE_ENV !== 'production' || navigationConflict)
+        ? { details: appError.details }
+        : {}),
     },
   });
 };

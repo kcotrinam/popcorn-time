@@ -32,6 +32,24 @@ type UserMediaSnapshot = {
   updatedAt: Date;
 };
 
+const normalizeCatalogTitle = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}]/gu, '');
+
+const isExactTitleMatch = (
+  title: string,
+  item: { title: string; originalTitle: string | null },
+) => {
+  const normalized = normalizeCatalogTitle(title);
+  return (
+    normalizeCatalogTitle(item.title) === normalized ||
+    (item.originalTitle !== null && normalizeCatalogTitle(item.originalTitle) === normalized)
+  );
+};
+
 const toItem = (item: UserMediaSnapshot): LibraryItem => ({
   id: item.id,
   provider: item.provider as LibraryItem['provider'],
@@ -73,6 +91,29 @@ export const libraryService = {
     return { item: toItem(item), created: true };
   },
   async createManual(userId: string, input: CreateManualLibraryItemInput): Promise<LibraryItem> {
+    const catalog = await catalogService.search({
+      query: input.title,
+      type: input.mediaType,
+      page: 1,
+    });
+    const exactMatches = catalog.results.filter((item) => isExactTitleMatch(input.title, item));
+    const confirmedMatches = input.releaseYear
+      ? exactMatches.filter((item) => item.releaseYear === input.releaseYear)
+      : exactMatches;
+    if (confirmedMatches.length === 1) {
+      const match = confirmedMatches[0];
+      if (match)
+        throw new AppError(409, ErrorCode.CATALOG_EXACT_MATCH, 'Matching catalog content exists', {
+          mediaType: match.mediaType,
+          externalId: match.externalId,
+          title: match.title,
+        });
+    }
+    if (confirmedMatches.length > 1)
+      throw new AppError(409, ErrorCode.CATALOG_AMBIGUOUS_MATCH, 'Multiple catalog matches exist', {
+        query: input.title,
+        mediaType: input.mediaType,
+      });
     const watchedAt = input.status === 'WATCHED' ? new Date() : null;
     return toItem(
       await libraryRepository.create({

@@ -125,6 +125,11 @@ export const openapiSpec = {
           '401': { description: 'Unauthenticated' },
           '403': { description: 'CSRF failed' },
           '400': { description: 'Invalid request' },
+          '409': {
+            description:
+              'An exact catalog match exists or multiple exact catalog matches require user selection',
+          },
+          '503': { description: 'Catalog verification is unavailable; no manual item was created' },
         },
       },
     },

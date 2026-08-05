@@ -35,12 +35,12 @@ const page: CatalogPage = {
     },
   ],
 };
-function renderPage() {
+function renderPage(initialEntry = '/explore') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <ThemeProvider theme={createTheme()}>
       <QueryClientProvider client={client}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[initialEntry]}>
           <ExplorePage />
         </MemoryRouter>
       </QueryClientProvider>
@@ -59,14 +59,14 @@ describe('ExplorePage', () => {
     renderPage();
     await waitFor(() => expect(catalog).toHaveBeenCalled());
     expect(catalog.mock.calls.at(-1)?.[0]).toMatchObject({ query: '', tab: 'all' });
-    fireEvent.change(screen.getByLabelText('Buscar películas, series o anime…'), {
+    fireEvent.change(screen.getByLabelText('Search movies, series, or anime…'), {
       target: { value: 'a' },
     });
     await act(async () => {
       await new Promise((resolve) => window.setTimeout(resolve, 10));
     });
     expect(catalog.mock.calls.at(-1)?.[0]).toMatchObject({ query: '' });
-    fireEvent.change(screen.getByLabelText('Buscar películas, series o anime…'), {
+    fireEvent.change(screen.getByLabelText('Search movies, series, or anime…'), {
       target: { value: 'arrival' },
     });
     await act(async () => {
@@ -100,5 +100,19 @@ describe('ExplorePage', () => {
       [{ mediaType: 'movie', externalId: 42 }],
       expect.any(AbortSignal),
     );
+  });
+
+  it('initializes a typed search and matching tab from URL parameters', async () => {
+    catalog.mockResolvedValue(page);
+    genres.mockResolvedValue([]);
+    memberships.mockResolvedValue({ results: [] });
+    renderPage('/explore?query=arrival&type=movie');
+    expect(screen.getByLabelText('Search movies, series, or anime…')).toHaveValue('arrival');
+    await waitFor(() =>
+      expect(catalog.mock.calls.at(-1)?.[0]).toMatchObject({ query: 'arrival', tab: 'movie' }),
+    );
+    expect(
+      await screen.findByRole('link', { name: 'View poster for Arrival' }),
+    ).toBeInTheDocument();
   });
 });

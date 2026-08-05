@@ -3,10 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../src/modules/library/library.repository.js', () => ({
   libraryRepository: { findOwned: vi.fn(), updateStatus: vi.fn(), list: vi.fn(), create: vi.fn() },
 }));
-vi.mock('../src/modules/catalog/catalog.service.js', () => ({ catalogService: {} }));
+vi.mock('../src/modules/catalog/catalog.service.js', () => ({
+  catalogService: { search: vi.fn() },
+}));
 
 import { libraryRepository } from '../src/modules/library/library.repository.js';
 import { libraryService } from '../src/modules/library/library.service.js';
+import { catalogService } from '../src/modules/catalog/catalog.service.js';
+import { AppError } from '../src/errors/app-error.js';
+import { ErrorCode } from '../src/errors/error-codes.js';
 
 const pendingItem = {
   id: 'item-id',
@@ -29,7 +34,16 @@ const pendingItem = {
 };
 
 describe('library service watched history', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(catalogService.search).mockResolvedValue({
+      results: [],
+      page: 1,
+      pageSize: 20,
+      totalPages: 1,
+      totalResults: 0,
+    });
+  });
 
   it('sets watchedAt when an owned Pending item is marked Watched', async () => {
     vi.mocked(libraryRepository.findOwned).mockResolvedValue(pendingItem);
@@ -105,5 +119,102 @@ describe('library service watched history', () => {
     );
     expect(item).toMatchObject({ provider: 'manual', externalId: null, status: 'WATCHED' });
     expect(item.watchedAt).toEqual(expect.any(String));
+  });
+
+  it('blocks a unique exact TMDB match by title and year without writing a manual item', async () => {
+    vi.mocked(catalogService.search).mockResolvedValue({
+      results: [
+        {
+          provider: 'tmdb',
+          externalId: 99,
+          mediaType: 'movie',
+          title: 'Amélie!',
+          originalTitle: 'Le Fabuleux Destin d’Amélie Poulain',
+          overview: null,
+          posterUrl: null,
+          backdropUrl: null,
+          releaseDate: null,
+          releaseYear: 2001,
+          externalRating: null,
+          voteCount: 0,
+          genreIds: [],
+        },
+      ],
+      page: 1,
+      totalPages: 1,
+      totalResults: 1,
+    });
+    await expect(
+      libraryService.createManual('user-a', {
+        title: 'Amelie',
+        mediaType: 'movie',
+        releaseYear: 2001,
+        categories: [],
+        status: 'WATCHLIST',
+      }),
+    ).rejects.toMatchObject({ statusCode: 409, code: 'CATALOG_EXACT_MATCH' });
+    expect(libraryRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('blocks unique original-title matches and directs ambiguous exact matches to search', async () => {
+    const originalTitle = {
+      provider: 'tmdb' as const,
+      externalId: 10,
+      mediaType: 'tv' as const,
+      title: 'Localized title',
+      originalTitle: 'Original series',
+      overview: null,
+      posterUrl: null,
+      backdropUrl: null,
+      releaseDate: null,
+      releaseYear: 2020,
+      externalRating: null,
+      voteCount: 0,
+      genreIds: [],
+    };
+    vi.mocked(catalogService.search).mockResolvedValue({
+      results: [originalTitle],
+      page: 1,
+      totalPages: 1,
+      totalResults: 1,
+    });
+    await expect(
+      libraryService.createManual('user-a', {
+        title: 'Original Series',
+        mediaType: 'tv',
+        categories: [],
+        status: 'WATCHLIST',
+      }),
+    ).rejects.toMatchObject({ code: 'CATALOG_EXACT_MATCH' });
+    vi.mocked(catalogService.search).mockResolvedValue({
+      results: [originalTitle, { ...originalTitle, externalId: 11 }],
+      page: 1,
+      totalPages: 1,
+      totalResults: 2,
+    });
+    await expect(
+      libraryService.createManual('user-a', {
+        title: 'Original Series',
+        mediaType: 'tv',
+        categories: [],
+        status: 'WATCHLIST',
+      }),
+    ).rejects.toMatchObject({ code: 'CATALOG_AMBIGUOUS_MATCH' });
+    expect(libraryRepository.create).not.toHaveBeenCalled();
+  });
+
+  it('does not write manual content when TMDB verification is unavailable', async () => {
+    vi.mocked(catalogService.search).mockRejectedValue(
+      new AppError(503, ErrorCode.UPSTREAM_SERVICE_UNAVAILABLE, 'Catalog service is unavailable'),
+    );
+    await expect(
+      libraryService.createManual('user-a', {
+        title: 'Private film',
+        mediaType: 'movie',
+        categories: [],
+        status: 'WATCHLIST',
+      }),
+    ).rejects.toMatchObject({ statusCode: 503, code: ErrorCode.UPSTREAM_SERVICE_UNAVAILABLE });
+    expect(libraryRepository.create).not.toHaveBeenCalled();
   });
 });

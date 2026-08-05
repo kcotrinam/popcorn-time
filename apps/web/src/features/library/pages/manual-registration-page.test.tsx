@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { HttpError } from '@/services/http-client';
 
 const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
 vi.mock('../library.api', () => ({ addManualToLibrary: vi.fn() }));
@@ -64,6 +65,41 @@ describe('ManualRegistrationPage', () => {
       ),
     );
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['library'] }));
+  });
+
+  it('navigates to the exact catalog match or an ambiguous Explore search without invalidating library data', async () => {
+    addManual.mockRejectedValueOnce(
+      new HttpError(409, 'Matching catalog content exists', 'CATALOG_EXACT_MATCH', {
+        mediaType: 'movie',
+        externalId: 42,
+      }),
+    );
+    renderPage();
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Arrival' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save for later' }));
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/explore/movie/42'));
+
+    addManual.mockRejectedValueOnce(
+      new HttpError(409, 'Multiple catalog matches exist', 'CATALOG_AMBIGUOUS_MATCH', {
+        mediaType: 'tv',
+        query: 'Signal',
+      }),
+    );
+    renderPage();
+    fireEvent.change(screen.getAllByLabelText(/Title/).at(-1)!, { target: { value: 'Signal' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Save for later' }).at(-1)!);
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/explore?query=Signal&type=tv'));
+  });
+
+  it('preserves the form and offers a retry message when TMDB is unavailable', async () => {
+    addManual.mockRejectedValueOnce(new HttpError(503, 'Catalog service is unavailable'));
+    renderPage();
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Private film' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save for later' }));
+    expect(
+      await screen.findByText('TMDB could not be verified. Please try again.'),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/Title/)).toHaveValue('Private film');
   });
 
   it('uses the fallback before a valid poster is supplied and renders an image preview for HTTPS URLs', () => {

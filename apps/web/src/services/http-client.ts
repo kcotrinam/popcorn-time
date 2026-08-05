@@ -2,6 +2,8 @@ export class HttpError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code?: string,
+    readonly details?: unknown,
   ) {
     super(message);
     this.name = 'HttpError';
@@ -51,11 +53,16 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   });
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => undefined);
-    const message =
+    const error =
       typeof body === 'object' && body !== null && 'error' in body
-        ? String((body as { error: { message?: string } }).error.message ?? response.statusText)
-        : response.statusText;
-    throw new HttpError(response.status, message);
+        ? (body as { error: { message?: string; code?: string; details?: unknown } }).error
+        : undefined;
+    throw new HttpError(
+      response.status,
+      String(error?.message ?? response.statusText),
+      error?.code,
+      error?.details,
+    );
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;

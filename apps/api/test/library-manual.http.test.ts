@@ -104,6 +104,22 @@ describe('manual library HTTP', () => {
     expect((await postManual()).status).toBe(401);
   });
 
+  it('returns typed catalog conflicts from the protected manual endpoint', async () => {
+    vi.mocked(libraryService.createManual).mockRejectedValueOnce(
+      new AppError(409, 'CATALOG_EXACT_MATCH', 'Matching catalog content exists', {
+        mediaType: 'movie',
+        externalId: 42,
+        title: 'Arrival',
+      }),
+    );
+    const response = await postManual();
+    expect(response.status).toBe(409);
+    expect(response.body.error).toMatchObject({
+      code: 'CATALOG_EXACT_MATCH',
+      details: { mediaType: 'movie', externalId: 42 },
+    });
+  });
+
   it('passes multiple category filters to the authenticated user-scoped listing', async () => {
     const response = await request(app).get(
       '/api/v1/users/me/library?categories=Anime,Family&status=WATCHLIST',

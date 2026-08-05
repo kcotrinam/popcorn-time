@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CatalogGrid } from '../components/catalog-grid';
 import { getCatalog, getGenres, type CatalogFilters } from '../catalog.api';
 import { getLibraryMemberships } from '../../library/library.api';
@@ -26,9 +27,14 @@ import { useDebouncedValue } from '../hooks/use-debounced-value';
 
 const initialFilters: CatalogFilters = { sort: 'popularity.desc' };
 export function ExplorePage() {
-  const [search, setSearch] = useState('');
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get('query')?.trim() ?? '';
+  const initialType = searchParams.get('type');
+  const initialTab: ExploreTab =
+    initialType === 'movie' || initialType === 'tv' ? initialType : 'all';
+  const [search, setSearch] = useState(initialQuery);
   const deferredSearch = useDebouncedValue(search.trim());
-  const [tab, setTab] = useState<ExploreTab>('all');
+  const [tab, setTab] = useState<ExploreTab>(initialTab);
   const [filters, setFilters] = useState<CatalogFilters>(initialFilters);
   const [page, setPage] = useState(1);
   const genreType = tab === 'movie' || tab === 'tv' ? tab : undefined;
@@ -90,16 +96,16 @@ export function ExplorePage() {
       <Stack spacing={3.5}>
         <Box>
           <Typography component="h1" variant="h4">
-            Explorar
+            Explore
           </Typography>
-          <Typography color="text.secondary">Encuentra tu próxima historia.</Typography>
+          <Typography color="text.secondary">Find your next story.</Typography>
         </Box>
         <TextField
           fullWidth
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          label="Buscar películas, series o anime…"
-          placeholder="Buscar películas, series o anime…"
+          label="Search movies, series, or anime…"
+          placeholder="Search movies, series, or anime…"
           slotProps={{
             input: { startAdornment: <SearchRoundedIcon color="action" sx={{ mr: 1 }} /> },
           }}
@@ -109,7 +115,7 @@ export function ExplorePage() {
           onChange={(_event, value: ExploreTab) => setTab(value)}
           variant="scrollable"
           allowScrollButtonsMobile
-          aria-label="Categorías de catálogo"
+          aria-label="Catalog categories"
         >
           {exploreTabs.map((item) => (
             <Tab key={item.value} value={item.value} label={item.label} />
@@ -117,16 +123,16 @@ export function ExplorePage() {
         </Tabs>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
           <FormControl size="small" sx={{ minWidth: 160 }} disabled={!genreType || isSearching}>
-            <InputLabel id="genre-label">Género</InputLabel>
+            <InputLabel id="genre-label">Genre</InputLabel>
             <Select
               labelId="genre-label"
-              label="Género"
+              label="Genre"
               value={filters.genreId?.toString() ?? ''}
               onChange={(event) =>
                 updateFilter('genreId', event.target.value ? Number(event.target.value) : undefined)
               }
             >
-              <MenuItem value="">Todos los géneros</MenuItem>
+              <MenuItem value="">All genres</MenuItem>
               {genres.data?.map((genre) => (
                 <MenuItem value={genre.id} key={genre.id}>
                   {genre.name}
@@ -136,7 +142,7 @@ export function ExplorePage() {
           </FormControl>
           <TextField
             size="small"
-            label="Año"
+            label="Year"
             type="text"
             disabled={isSearching}
             value={filters.year ?? ''}
@@ -154,10 +160,10 @@ export function ExplorePage() {
             sx={{ minWidth: 120 }}
           />
           <FormControl size="small" sx={{ minWidth: 180 }} disabled={isSearching}>
-            <InputLabel id="rating-label">Rating mínimo</InputLabel>
+            <InputLabel id="rating-label">Minimum rating</InputLabel>
             <Select
               labelId="rating-label"
-              label="Rating mínimo"
+              label="Minimum rating"
               value={filters.minRating?.toString() ?? ''}
               onChange={(event) =>
                 updateFilter(
@@ -166,19 +172,19 @@ export function ExplorePage() {
                 )
               }
             >
-              <MenuItem value="">Cualquier rating</MenuItem>
+              <MenuItem value="">Any rating</MenuItem>
               {ratingOptions.map((rating) => (
                 <MenuItem value={rating} key={rating}>
-                  {rating === 0 ? 'Sin mínimo' : `${rating}+`}
+                  {rating === 0 ? 'No minimum' : `${rating}+`}
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
           <FormControl size="small" sx={{ minWidth: 205 }} disabled={isSearching}>
-            <InputLabel id="sort-label">Ordenar por</InputLabel>
+            <InputLabel id="sort-label">Sort by</InputLabel>
             <Select
               labelId="sort-label"
-              label="Ordenar por"
+              label="Sort by"
               value={filters.sort}
               onChange={(event) =>
                 updateFilter('sort', event.target.value as CatalogFilters['sort'])
@@ -194,12 +200,12 @@ export function ExplorePage() {
         </Stack>
         {isSearching ? (
           <Typography variant="body2" color="text.secondary">
-            Resultados para “{effectiveQuery}”
+            Results for “{effectiveQuery}”
           </Typography>
         ) : null}
         {catalog.isLoading ? (
           <Stack alignItems="center" py={8} role="status">
-            <CircularProgress aria-label="Cargando catálogo" />
+            <CircularProgress aria-label="Loading catalog" />
           </Stack>
         ) : null}
         {catalog.isError ? (
@@ -207,18 +213,18 @@ export function ExplorePage() {
             severity="error"
             action={
               <Button color="inherit" size="small" onClick={() => void catalog.refetch()}>
-                Reintentar
+                Retry
               </Button>
             }
           >
-            No pudimos cargar el catálogo. Inténtalo nuevamente.
+            We could not load the catalog. Please try again.
           </Alert>
         ) : null}
         {catalog.data && catalog.data.results.length === 0 ? (
           <Stack alignItems="center" spacing={1} py={8}>
-            <Typography variant="h6">No encontramos resultados</Typography>
+            <Typography variant="h6">No results found</Typography>
             <Typography color="text.secondary">
-              Prueba con otra búsqueda o ajusta los filtros.
+              Try another search or adjust the filters.
             </Typography>
           </Stack>
         ) : null}
@@ -233,10 +239,10 @@ export function ExplorePage() {
                 color="primary"
                 showFirstButton
                 showLastButton
-                aria-label="Paginación del catálogo"
+                aria-label="Catalog pagination"
               />
               <Typography variant="caption" color="text.secondary">
-                {catalog.data.totalResults} resultados
+                {catalog.data.totalResults} results
               </Typography>
             </Stack>
           </>
