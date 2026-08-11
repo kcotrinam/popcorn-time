@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import type { LibraryItem, LibraryMembershipResponse, LibraryPage } from '@popcorn-time/shared';
 import { AppError } from '../../errors/app-error.js';
 import { ErrorCode } from '../../errors/error-codes.js';
@@ -9,6 +10,7 @@ import type {
   LibraryItemParams,
   LibraryMembershipQuery,
   LibraryQuery,
+  SaveLibraryExperienceInput,
   UpdateLibraryItemInput,
 } from './library.schemas.js';
 
@@ -28,6 +30,8 @@ type UserMediaSnapshot = {
   genreIds: number[];
   manualCategories: string[];
   watchedAt: Date | null;
+  personalRating: Prisma.Decimal | null;
+  privateComment: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -66,6 +70,8 @@ const toItem = (item: UserMediaSnapshot): LibraryItem => ({
   genreIds: item.genreIds,
   manualCategories: item.manualCategories as LibraryItem['manualCategories'],
   watchedAt: item.watchedAt?.toISOString() ?? null,
+  personalRating: item.personalRating === null ? null : Number(item.personalRating),
+  privateComment: item.privateComment,
   createdAt: item.createdAt.toISOString(),
   updatedAt: item.updatedAt.toISOString(),
 });
@@ -156,6 +162,9 @@ export const libraryService = {
         externalId: item.externalId as number,
         mediaType: item.mediaType as LibraryItem['mediaType'],
         status: item.status,
+        watchedAt: item.watchedAt?.toISOString() ?? null,
+        personalRating: item.personalRating === null ? null : Number(item.personalRating),
+        privateComment: item.privateComment,
       })),
     };
   },
@@ -169,6 +178,21 @@ export const libraryService = {
           ? new Date()
           : null;
     return toItem(await libraryRepository.updateStatus(item.id, input.status, watchedAt));
+  },
+  async saveExperience(
+    userId: string,
+    params: LibraryItemParams,
+    input: SaveLibraryExperienceInput,
+  ) {
+    const item = await libraryRepository.findOwned(userId, params.id);
+    if (!item) throw new AppError(404, ErrorCode.NOT_FOUND, 'Library item was not found');
+    return toItem(
+      await libraryRepository.saveExperience(item.id, {
+        rating: input.rating ?? null,
+        comment: input.comment ?? null,
+        watchedAt: input.watchedAt,
+      }),
+    );
   },
   async remove(userId: string, params: LibraryItemParams) {
     const item = await libraryRepository.findOwned(userId, params.id);

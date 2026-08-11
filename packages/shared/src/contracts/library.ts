@@ -19,6 +19,8 @@ export type LibraryItem = {
   genreIds: number[];
   manualCategories: ManualCategory[];
   watchedAt: string | null;
+  personalRating: number | null;
+  privateComment: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -47,10 +49,18 @@ export type CreateManualLibraryItemInput = {
   status: LibraryStatus;
 };
 export type UpdateLibraryItemInput = { status: LibraryStatus };
+export type SaveLibraryExperienceInput = {
+  rating?: number | null;
+  comment?: string | null;
+  watchedAt: string;
+};
 export type LibraryMembership = {
   externalId: number;
   mediaType: CatalogMediaType;
   status: LibraryStatus;
   libraryItemId: string;
+  watchedAt: string | null;
+  personalRating: number | null;
+  privateComment: string | null;
 };
 export type LibraryMembershipResponse = { results: LibraryMembership[] };

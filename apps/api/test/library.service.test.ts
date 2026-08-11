@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../src/modules/library/library.repository.js', () => ({
-  libraryRepository: { findOwned: vi.fn(), updateStatus: vi.fn(), list: vi.fn(), create: vi.fn() },
+  libraryRepository: {
+    findOwned: vi.fn(),
+    updateStatus: vi.fn(),
+    saveExperience: vi.fn(),
+    list: vi.fn(),
+    create: vi.fn(),
+  },
 }));
 vi.mock('../src/modules/catalog/catalog.service.js', () => ({
   catalogService: { search: vi.fn() },
@@ -29,6 +35,8 @@ const pendingItem = {
   genreIds: [],
   manualCategories: [],
   watchedAt: null,
+  personalRating: null,
+  privateComment: null,
   createdAt: new Date('2026-08-01T00:00:00.000Z'),
   updatedAt: new Date('2026-08-01T00:00:00.000Z'),
 };
@@ -65,8 +73,14 @@ describe('library service watched history', () => {
     expect(item.watchedAt).toEqual(expect.any(String));
   });
 
-  it('clears watchedAt when an owned Watched item returns to Pending', async () => {
-    const watchedItem = { ...pendingItem, status: 'WATCHED' as const, watchedAt: new Date() };
+  it('clears the complete experience when an owned Watched item returns to Pending', async () => {
+    const watchedItem = {
+      ...pendingItem,
+      status: 'WATCHED' as const,
+      watchedAt: new Date(),
+      personalRating: 8.5,
+      privateComment: 'Private note',
+    };
     vi.mocked(libraryRepository.findOwned).mockResolvedValue(watchedItem);
     vi.mocked(libraryRepository.updateStatus).mockImplementation(
       async (_id, status, watchedAt) => ({
@@ -80,6 +94,41 @@ describe('library service watched history', () => {
 
     expect(libraryRepository.updateStatus).toHaveBeenCalledWith('item-id', 'WATCHLIST', null);
     expect(item.watchedAt).toBeNull();
+  });
+
+  it('saves a private experience and marks an owned item Watched', async () => {
+    vi.mocked(libraryRepository.findOwned).mockResolvedValue(pendingItem);
+    vi.mocked(libraryRepository.saveExperience).mockImplementation(async (_id, input) => ({
+      ...pendingItem,
+      status: 'WATCHED',
+      watchedAt: input.watchedAt,
+      personalRating: input.rating,
+      privateComment: input.comment,
+    }));
+
+    const item = await libraryService.saveExperience(
+      'user-a',
+      { id: 'item-id' },
+      { rating: 8.5, comment: 'Private note', watchedAt: new Date('2026-08-10T12:00:00.000Z') },
+    );
+
+    expect(libraryRepository.saveExperience).toHaveBeenCalledWith(
+      'item-id',
+      expect.objectContaining({ rating: 8.5, comment: 'Private note' }),
+    );
+    expect(item).toMatchObject({
+      status: 'WATCHED',
+      personalRating: 8.5,
+      privateComment: 'Private note',
+    });
+  });
+
+  it('does not save an experience for another user item', async () => {
+    vi.mocked(libraryRepository.findOwned).mockResolvedValue(null);
+    await expect(
+      libraryService.saveExperience('user-a', { id: 'item-id' }, { watchedAt: new Date() }),
+    ).rejects.toMatchObject({ statusCode: 404 });
+    expect(libraryRepository.saveExperience).not.toHaveBeenCalled();
   });
 
   it('passes the recent-watched sort through to the user-scoped repository query', async () => {

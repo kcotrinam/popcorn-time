@@ -9,6 +9,7 @@ import { getCatalog, getCatalogDetail } from '../catalog.api';
 import {
   addToLibrary,
   getLibraryMemberships,
+  saveLibraryExperience,
   updateLibraryStatus,
 } from '@/features/library/library.api';
 
@@ -16,6 +17,7 @@ vi.mock('../catalog.api', () => ({ getCatalog: vi.fn(), getCatalogDetail: vi.fn(
 vi.mock('@/features/library/library.api', () => ({
   addToLibrary: vi.fn(),
   getLibraryMemberships: vi.fn(),
+  saveLibraryExperience: vi.fn(),
   updateLibraryStatus: vi.fn(),
 }));
 
@@ -82,9 +84,9 @@ describe('CatalogDetailPage', () => {
     expect(screen.getByText('TMDB 8.4')).toBeInTheDocument();
     expect(screen.getByText('Jane Director')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Your Experience' })).toBeInTheDocument();
-    expect(screen.getByText('Personal ratings are not available yet.')).toBeInTheDocument();
-    expect(screen.getByText('Personal comments are not available yet.')).toBeInTheDocument();
-    expect(screen.getByText('Not in your library')).toBeInTheDocument();
+    expect(
+      screen.getByText('Mark this title as watched to log your private experience.'),
+    ).toBeInTheDocument();
     expect(
       await screen.findByText('No similar content is available right now.'),
     ).toBeInTheDocument();
@@ -143,7 +145,15 @@ describe('CatalogDetailPage', () => {
   it('marks a pending item watched, disables duplicate submission, and invalidates library queries', async () => {
     mockDefault({
       results: [
-        { externalId: 123, mediaType: 'movie', status: 'WATCHLIST', libraryItemId: 'library-id' },
+        {
+          externalId: 123,
+          mediaType: 'movie',
+          status: 'WATCHLIST',
+          libraryItemId: 'library-id',
+          watchedAt: null,
+          personalRating: null,
+          privateComment: null,
+        },
       ],
     });
     let resolveUpdate: (() => void) | undefined;
@@ -171,7 +181,15 @@ describe('CatalogDetailPage', () => {
   it('shows error feedback when marking watched fails', async () => {
     mockDefault({
       results: [
-        { externalId: 123, mediaType: 'movie', status: 'WATCHLIST', libraryItemId: 'library-id' },
+        {
+          externalId: 123,
+          mediaType: 'movie',
+          status: 'WATCHLIST',
+          libraryItemId: 'library-id',
+          watchedAt: null,
+          personalRating: null,
+          privateComment: null,
+        },
       ],
     });
     vi.mocked(updateLibraryStatus).mockRejectedValue(new Error('failed'));
@@ -186,7 +204,15 @@ describe('CatalogDetailPage', () => {
   it('shows watched state without the mark-as-watched action', async () => {
     mockDefault({
       results: [
-        { externalId: 123, mediaType: 'movie', status: 'WATCHED', libraryItemId: 'library-id' },
+        {
+          externalId: 123,
+          mediaType: 'movie',
+          status: 'WATCHED',
+          libraryItemId: 'library-id',
+          watchedAt: '2026-08-10T12:00:00.000Z',
+          personalRating: null,
+          privateComment: null,
+        },
       ],
     });
     renderPage();
@@ -194,5 +220,38 @@ describe('CatalogDetailPage', () => {
     expect((await screen.findAllByText('Watched')).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Mark as watched' })).not.toBeInTheDocument();
     expect(screen.getByText('Visible only to you')).toBeInTheDocument();
+  });
+
+  it('shows and saves a watched item’s private experience', async () => {
+    mockDefault({
+      results: [
+        {
+          externalId: 123,
+          mediaType: 'movie',
+          status: 'WATCHED',
+          libraryItemId: 'library-id',
+          watchedAt: '2026-08-10T12:00:00.000Z',
+          personalRating: 8.5,
+          privateComment: 'A private note.',
+        },
+      ],
+    });
+    vi.mocked(saveLibraryExperience).mockResolvedValue({} as never);
+    renderPage();
+
+    expect(await screen.findByText('8.5')).toBeInTheDocument();
+    expect(screen.getByText('A private note.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear rating' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Experience' }));
+
+    await waitFor(() =>
+      expect(saveLibraryExperience).toHaveBeenCalledWith('library-id', {
+        rating: null,
+        comment: 'A private note.',
+        watchedAt: expect.any(String),
+      }),
+    );
+    expect(await screen.findByText('Your experience was saved.')).toBeInTheDocument();
   });
 });

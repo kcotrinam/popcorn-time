@@ -1,9 +1,11 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import LocalMoviesRoundedIcon from '@mui/icons-material/LocalMoviesRounded';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded';
+import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import {
   Alert,
@@ -15,9 +17,12 @@ import {
   CircularProgress,
   Container,
   Divider,
+  LinearProgress,
   Paper,
+  Slider,
   Snackbar,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,10 +33,15 @@ import { getCatalog, getCatalogDetail } from '../catalog.api';
 import {
   addToLibrary,
   getLibraryMemberships,
+  saveLibraryExperience,
   updateLibraryStatus,
 } from '@/features/library/library.api';
 
 const mediaLabels = { movie: 'Movie', tv: 'Series' } as const;
+const localDate = (value = new Date()) => {
+  const offset = value.getTimezoneOffset() * 60_000;
+  return new Date(value.getTime() - offset).toISOString().slice(0, 10);
+};
 
 function Poster({ item }: { item: Pick<CatalogCard, 'posterUrl' | 'title'> }) {
   const [failed, setFailed] = useState(false);
@@ -124,6 +134,10 @@ export function CatalogDetailPage() {
   const queryClient = useQueryClient();
   const [backdropFailed, setBackdropFailed] = useState(false);
   const [message, setMessage] = useState<string>();
+  const [experienceEditing, setExperienceEditing] = useState(false);
+  const [experienceRating, setExperienceRating] = useState<number | null>(null);
+  const [experienceComment, setExperienceComment] = useState('');
+  const [experienceDate, setExperienceDate] = useState(localDate());
   const validParams = Boolean(mediaType && Number.isInteger(externalId) && externalId > 0);
   useEffect(() => setBackdropFailed(false), [mediaType, externalId]);
   const detail = useQuery({
@@ -138,6 +152,14 @@ export function CatalogDetailPage() {
     staleTime: 30_000,
   });
   const libraryMembership = membership.data?.results[0];
+  useEffect(() => {
+    if (!libraryMembership) return;
+    setExperienceRating(libraryMembership.personalRating);
+    setExperienceComment(libraryMembership.privateComment ?? '');
+    setExperienceDate(
+      libraryMembership.watchedAt ? localDate(new Date(libraryMembership.watchedAt)) : localDate(),
+    );
+  }, [libraryMembership]);
   const similarRequest = useMemo(
     () => ({
       tab: mediaType ?? 'movie',
@@ -157,9 +179,27 @@ export function CatalogDetailPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['library'] });
       void queryClient.invalidateQueries({ queryKey: ['library-membership'] });
+      setExperienceEditing(true);
       setMessage(`${detail.data?.title ?? 'This item'} is marked as watched.`);
     },
     onError: () => setMessage('We could not update this item. Please try again.'),
+  });
+  const saveExperience = useMutation({
+    mutationFn: () =>
+      saveLibraryExperience(libraryMembership!.libraryItemId, {
+        rating: experienceRating,
+        comment: experienceComment.trim() || null,
+        watchedAt: new Date(`${experienceDate}T12:00:00`).toISOString(),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['library'] });
+      void queryClient.invalidateQueries({ queryKey: ['library-membership'] });
+      void queryClient.invalidateQueries({ queryKey: ['catalog-detail'] });
+      void queryClient.invalidateQueries({ queryKey: ['home'] });
+      setExperienceEditing(false);
+      setMessage('Your experience was saved.');
+    },
+    onError: () => setMessage('We could not save your experience. Please try again.'),
   });
   const add = useMutation({
     mutationFn: () =>
@@ -318,15 +358,12 @@ export function CatalogDetailPage() {
             ) : null}
             {libraryMembership?.status === 'WATCHLIST' ? (
               <>
-                <Button
-                  component="div"
-                  role="status"
-                  fullWidth
-                  variant="contained"
-                  startIcon={<CheckCircleRoundedIcon />}
-                >
-                  In your library
-                </Button>
+                <Chip
+                  icon={<CheckCircleRoundedIcon />}
+                  label="In your library"
+                  color="primary"
+                  sx={{ width: '100%', justifyContent: 'flex-start' }}
+                />
                 <Button
                   fullWidth
                   variant="outlined"
@@ -346,15 +383,11 @@ export function CatalogDetailPage() {
               </>
             ) : null}
             {libraryMembership?.status === 'WATCHED' ? (
-              <Button
-                component="div"
-                role="status"
-                fullWidth
-                variant="contained"
-                startIcon={<CheckCircleRoundedIcon />}
-              >
-                Watched
-              </Button>
+              <Chip
+                icon={<CheckCircleRoundedIcon />}
+                label="Watched"
+                sx={{ width: '100%', justifyContent: 'flex-start' }}
+              />
             ) : null}
             {membership.isError ? (
               <Alert severity="warning">We could not check your library status.</Alert>
@@ -469,6 +502,8 @@ export function CatalogDetailPage() {
               aria-labelledby="your-experience-heading"
               sx={{
                 overflow: 'hidden',
+                border: 1,
+                borderRadius: 2,
                 borderColor: libraryMembership ? 'primary.main' : 'divider',
                 bgcolor: (theme) => alpha(theme.palette.background.paper, 0.88),
               }}
@@ -492,64 +527,181 @@ export function CatalogDetailPage() {
                 >
                   Your Experience
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Private activity
-                </Typography>
-              </Stack>
-              <Box
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: 'minmax(150px, 0.8fr) minmax(210px, 1fr)' },
-                  gap: 2.5,
-                  px: { xs: 2, md: 2.5 },
-                  py: 2.25,
-                }}
-              >
-                <Box>
-                  <Stack direction="row" spacing={0.75} alignItems="baseline">
-                    <Typography
-                      color={libraryMembership ? 'primary.main' : 'text.secondary'}
-                      sx={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}
-                    >
-                      —
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                      /10
-                    </Typography>
-                  </Stack>
-                  <Box
-                    aria-hidden="true"
-                    sx={{
-                      height: 5,
-                      mt: 1.75,
-                      borderRadius: 999,
-                      bgcolor: 'divider',
-                    }}
-                  />
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ display: 'block', mt: 1.25, fontStyle: 'italic' }}
+                {libraryMembership?.status === 'WATCHED' && !experienceEditing ? (
+                  <Button
+                    size="small"
+                    startIcon={<EditRoundedIcon />}
+                    onClick={() => setExperienceEditing(true)}
                   >
-                    Personal ratings are not available yet.
-                  </Typography>
-                </Box>
+                    Edit
+                  </Button>
+                ) : null}
+              </Stack>
+              {libraryMembership?.status === 'WATCHED' && experienceEditing ? (
+                <Stack spacing={2} sx={{ px: { xs: 2, md: 2.5 }, py: 2.25 }}>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', sm: 'minmax(170px, 0.8fr) minmax(0, 1fr)' },
+                      gap: 2.5,
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                        RATING
+                      </Typography>
+                      <Typography
+                        color={experienceRating === null ? 'text.secondary' : 'primary.main'}
+                        fontWeight={800}
+                      >
+                        {experienceRating === null
+                          ? 'Not rated'
+                          : `${experienceRating.toFixed(1)}/10`}
+                      </Typography>
+                      <Slider
+                        aria-label="Personal rating"
+                        value={experienceRating ?? 1}
+                        min={1}
+                        max={10}
+                        step={0.5}
+                        onChange={(_event, value) => setExperienceRating(value as number)}
+                        disabled={saveExperience.isPending}
+                      />
+                      <Button
+                        size="small"
+                        onClick={() => setExperienceRating(null)}
+                        disabled={experienceRating === null || saveExperience.isPending}
+                      >
+                        Clear rating
+                      </Button>
+                    </Box>
+                    <Stack spacing={1.5}>
+                      <TextField
+                        label="Comment"
+                        multiline
+                        minRows={3}
+                        value={experienceComment}
+                        onChange={(event) => setExperienceComment(event.target.value)}
+                        disabled={saveExperience.isPending}
+                        slotProps={{ htmlInput: { maxLength: 2000 } }}
+                      />
+                      <TextField
+                        label="Watched on"
+                        type="date"
+                        required
+                        value={experienceDate}
+                        onChange={(event) => setExperienceDate(event.target.value)}
+                        disabled={saveExperience.isPending}
+                        slotProps={{
+                          inputLabel: { shrink: true },
+                          htmlInput: { max: localDate() },
+                        }}
+                      />
+                    </Stack>
+                  </Box>
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button
+                      onClick={() => {
+                        setExperienceEditing(false);
+                        setExperienceRating(libraryMembership.personalRating);
+                        setExperienceComment(libraryMembership.privateComment ?? '');
+                        setExperienceDate(
+                          libraryMembership.watchedAt
+                            ? localDate(new Date(libraryMembership.watchedAt))
+                            : localDate(),
+                        );
+                      }}
+                      disabled={saveExperience.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<SaveRoundedIcon />}
+                      onClick={() => saveExperience.mutate()}
+                      disabled={saveExperience.isPending || !experienceDate}
+                      aria-busy={saveExperience.isPending}
+                    >
+                      {saveExperience.isPending ? 'Saving…' : 'Save Experience'}
+                    </Button>
+                  </Stack>
+                </Stack>
+              ) : libraryMembership?.status === 'WATCHED' ? (
                 <Box
                   sx={{
-                    p: 1.5,
-                    minHeight: 106,
-                    borderRadius: 1,
-                    bgcolor: (theme) => alpha(theme.palette.background.default, 0.58),
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: '1fr',
+                      sm: 'minmax(150px, 0.8fr) minmax(210px, 1fr)',
+                    },
+                    gap: 2.5,
+                    px: { xs: 2, md: 2.5 },
+                    py: 2.25,
                   }}
                 >
-                  <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                    COMMENT
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Personal comments are not available yet.
+                  <Box>
+                    <Stack direction="row" spacing={0.75} alignItems="baseline">
+                      <Typography
+                        color={
+                          libraryMembership.personalRating === null
+                            ? 'text.secondary'
+                            : 'primary.main'
+                        }
+                        sx={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}
+                      >
+                        {libraryMembership.personalRating === null
+                          ? '—'
+                          : libraryMembership.personalRating.toFixed(1)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                        /10
+                      </Typography>
+                    </Stack>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mt: 1.25, fontStyle: 'italic' }}
+                    >
+                      {libraryMembership.personalRating === null
+                        ? 'Not rated'
+                        : 'Your personal rating'}
+                    </Typography>
+                    <LinearProgress
+                      aria-label="Personal rating"
+                      aria-valuemax={10}
+                      aria-valuemin={1}
+                      aria-valuenow={libraryMembership.personalRating ?? undefined}
+                      role="meter"
+                      variant="determinate"
+                      value={
+                        libraryMembership.personalRating ? libraryMembership.personalRating * 10 : 0
+                      }
+                      sx={{ mt: 1.25, height: 5, borderRadius: 3 }}
+                    />
+                  </Box>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      minHeight: 106,
+                      borderRadius: 1,
+                      bgcolor: (theme) => alpha(theme.palette.background.default, 0.58),
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                      COMMENT
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {libraryMembership.privateComment || 'No private comment yet.'}
+                    </Typography>
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={{ px: { xs: 2, md: 2.5 }, py: 2.25 }}>
+                  <Typography color="text.secondary">
+                    Mark this title as watched to log your private experience.
                   </Typography>
                 </Box>
-              </Box>
+              )}
               <Divider />
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
@@ -574,7 +726,9 @@ export function CatalogDetailPage() {
                       : membership.isError
                         ? 'Library status unavailable'
                         : libraryMembership?.status === 'WATCHED'
-                          ? 'Watched'
+                          ? libraryMembership.watchedAt
+                            ? `Watched on ${new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(new Date(libraryMembership.watchedAt))}`
+                            : 'Watched'
                           : libraryMembership?.status === 'WATCHLIST'
                             ? 'Saved to Pending'
                             : 'Not in your library'}

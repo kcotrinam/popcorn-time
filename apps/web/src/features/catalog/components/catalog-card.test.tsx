@@ -69,6 +69,9 @@ describe('CatalogCard', () => {
                 mediaType: item.mediaType,
                 status: 'WATCHLIST',
                 libraryItemId: '8a7ef9a5-89a3-4b31-b94b-1f5726ffb9ec',
+                watchedAt: null,
+                personalRating: null,
+                privateComment: null,
               }}
             />
           </MemoryRouter>

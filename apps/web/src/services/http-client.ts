@@ -73,6 +73,8 @@ export const postJson = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) });
 export const patchJson = <T>(path: string, body: unknown) =>
   request<T>(path, { method: 'PATCH', body: JSON.stringify(body) });
+export const putJson = <T>(path: string, body: unknown) =>
+  request<T>(path, { method: 'PUT', body: JSON.stringify(body) });
 export const deleteJson = (path: string) => request<void>(path, { method: 'DELETE' });
 export const clearCsrfToken = () => {
   csrfToken = undefined;

@@ -107,4 +107,39 @@ describeIntegration('manual user media persistence', () => {
       manualCategories: ['Anime', 'Family'],
     });
   });
+
+  it('persists nullable experiences and rejects ratings outside valid half-point increments', async () => {
+    const client = prisma!;
+    const experience = await client.userMedia.create({
+      data: {
+        userId: firstUserId,
+        provider: 'manual',
+        externalId: null,
+        mediaType: 'movie',
+        status: 'WATCHED',
+        title: 'Private experience',
+        genreIds: [],
+        watchedAt: new Date(),
+        personalRating: 8.5,
+        privateComment: 'Only the owner can read this.',
+      },
+    });
+    expect(experience).toMatchObject({
+      personalRating: expect.anything(),
+      privateComment: 'Only the owner can read this.',
+    });
+    await expect(
+      client.userMedia.create({
+        data: {
+          userId: firstUserId,
+          provider: 'manual',
+          externalId: null,
+          mediaType: 'movie',
+          title: 'Invalid experience',
+          genreIds: [],
+          personalRating: 8.2,
+        },
+      }),
+    ).rejects.toThrow();
+  });
 });

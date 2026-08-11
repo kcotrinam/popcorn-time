@@ -89,4 +89,4 @@ The partial username index is defined manually in `20260723000000_add_authentica
 
 ## Scope
 
-The current implementation includes internal users, custom authentication, the public TMDB-backed catalog, and the authenticated Explore experience. Personal libraries, watchlist/watched status, ratings, comments, recommendations, shared plans, notifications, Google OAuth, a mobile app, and i18n remain future work.
+The current implementation includes internal users, custom authentication, the public TMDB-backed catalog, authenticated Explore, private Pending/Watched libraries, manual titles, and owner-private watched-date, rating, and comment experiences. Recommendations, shared plans, notifications, Google OAuth, a mobile app, and i18n remain future work.

@@ -18,7 +18,26 @@ export const libraryRepository = {
     }),
   create: (data: Prisma.UserMediaUncheckedCreateInput) => prisma.userMedia.create({ data }),
   updateStatus: (id: string, status: UserMediaStatus, watchedAt: Date | null) =>
-    prisma.userMedia.update({ where: { id }, data: { status, watchedAt } }),
+    prisma.userMedia.update({
+      where: { id },
+      data:
+        status === 'WATCHLIST'
+          ? { status, watchedAt: null, personalRating: null, privateComment: null }
+          : { status, watchedAt },
+    }),
+  saveExperience: (
+    id: string,
+    input: { rating: number | null; comment: string | null; watchedAt: Date },
+  ) =>
+    prisma.userMedia.update({
+      where: { id },
+      data: {
+        status: 'WATCHED',
+        watchedAt: input.watchedAt,
+        personalRating: input.rating,
+        privateComment: input.comment,
+      },
+    }),
   delete: (id: string) => prisma.userMedia.delete({ where: { id } }),
   findMemberships: (userId: string, query: LibraryMembershipQuery) =>
     prisma.userMedia.findMany({
@@ -30,7 +49,15 @@ export const libraryRepository = {
           externalId: item.externalId,
         })),
       },
-      select: { id: true, externalId: true, mediaType: true, status: true },
+      select: {
+        id: true,
+        externalId: true,
+        mediaType: true,
+        status: true,
+        watchedAt: true,
+        personalRating: true,
+        privateComment: true,
+      },
     }),
   list: (userId: string, query: LibraryQuery) => {
     const where: Prisma.UserMediaWhereInput = {

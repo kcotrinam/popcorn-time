@@ -236,6 +236,43 @@ export const openapiSpec = {
         },
       },
     },
+    '/api/v1/users/me/library/{id}/experience': {
+      put: {
+        summary: 'Create or update the authenticated user’s private library experience',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['watchedAt'],
+                properties: {
+                  rating: {
+                    type: 'number',
+                    minimum: 1,
+                    maximum: 10,
+                    multipleOf: 0.5,
+                    nullable: true,
+                  },
+                  comment: { type: 'string', maxLength: 2000, nullable: true },
+                  watchedAt: { type: 'string', format: 'date-time' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Updated private library item' },
+          '400': { description: 'Invalid experience payload' },
+          '401': { description: 'Unauthenticated' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not found' },
+        },
+      },
+    },
     '/api/v1/catalog/search': {
       get: {
         summary: 'Search the public catalog',

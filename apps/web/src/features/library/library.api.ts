@@ -5,8 +5,16 @@ import type {
   LibraryMembershipResponse,
   LibraryPage,
   LibraryStatus,
+  SaveLibraryExperienceInput,
 } from '@popcorn-time/shared';
-import { deleteJson, getJson, patchJson, postJson, type QueryParams } from '@/services/http-client';
+import {
+  deleteJson,
+  getJson,
+  patchJson,
+  postJson,
+  putJson,
+  type QueryParams,
+} from '@/services/http-client';
 
 export type LibraryFilters = {
   status?: LibraryStatus;
@@ -40,4 +48,6 @@ export const getLibraryMemberships = (items: LibraryMembershipReference[], signa
   });
 export const updateLibraryStatus = (id: string, status: LibraryStatus) =>
   patchJson<LibraryItem>(`/users/me/library/${id}`, { status });
+export const saveLibraryExperience = (id: string, input: SaveLibraryExperienceInput) =>
+  putJson<LibraryItem>(`/users/me/library/${id}/experience`, input);
 export const removeLibraryItem = (id: string) => deleteJson(`/users/me/library/${id}`);

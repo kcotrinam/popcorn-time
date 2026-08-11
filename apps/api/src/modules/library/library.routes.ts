@@ -9,6 +9,7 @@ import {
   libraryItemParamsSchema,
   libraryMembershipQuerySchema,
   libraryQuerySchema,
+  saveLibraryExperienceSchema,
   updateLibraryItemSchema,
 } from './library.schemas.js';
 
@@ -46,6 +47,13 @@ export function createLibraryRouter(): RouterType {
     csrfProtection,
     validateRequest({ params: libraryItemParamsSchema, body: updateLibraryItemSchema }),
     libraryController.update,
+  );
+  router.put(
+    '/users/me/library/:id/experience',
+    requireAuthentication,
+    csrfProtection,
+    validateRequest({ params: libraryItemParamsSchema, body: saveLibraryExperienceSchema }),
+    libraryController.saveExperience,
   );
   router.delete(
     '/users/me/library/:id',

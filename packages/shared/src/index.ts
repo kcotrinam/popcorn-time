@@ -19,5 +19,6 @@ export type {
   LibraryPage,
   LibraryStatus,
   ManualCategory,
+  SaveLibraryExperienceInput,
   UpdateLibraryItemInput,
 } from './contracts/library.js';

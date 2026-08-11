@@ -66,6 +66,8 @@ model UserMedia {
   genreIds         Int[]           @default([]) @map("genre_ids")
   manualCategories String[]        @default([]) @map("manual_categories")
   watchedAt        DateTime?       @map("watched_at")
+  personalRating   Decimal?        @db.Decimal(3, 1) @map("personal_rating")
+  privateComment   String?         @db.VarChar(2000) @map("private_comment")
   createdAt        DateTime        @default(now()) @map("created_at")
   updatedAt        DateTime        @updatedAt @map("updated_at")
   user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)

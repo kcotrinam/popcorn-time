@@ -1,4 +1,5 @@
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
@@ -6,6 +7,7 @@ import ListRoundedIcon from '@mui/icons-material/ListRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import {
   Alert,
+  alpha,
   Box,
   Button,
   Chip,
@@ -43,9 +45,11 @@ import { useDebouncedValue } from '@/features/catalog/hooks/use-debounced-value'
 import {
   getLibrary,
   removeLibraryItem,
+  saveLibraryExperience,
   updateLibraryStatus,
   type LibraryFilters,
 } from '../library.api';
+import { ExperienceDialog } from '../components/experience-dialog';
 
 type View = 'grid' | 'list';
 const pageSize = 24;
@@ -95,6 +99,15 @@ function LibraryCard({
         borderColor: 'divider',
         borderRadius: 2,
         bgcolor: 'background.paper',
+        transition: 'border-color 160ms ease, transform 160ms ease',
+        '&:hover, &:focus-within': {
+          borderColor: 'primary.main',
+          transform: view === 'grid' ? 'translateY(-2px)' : undefined,
+        },
+        '&:hover .library-card-actions, &:focus-within .library-card-actions': {
+          opacity: 1,
+          pointerEvents: 'auto',
+        },
       }}
     >
       <Box
@@ -103,6 +116,8 @@ function LibraryCard({
           flexShrink: 0,
           aspectRatio: '2 / 3',
           bgcolor: 'background.default',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
         {item.posterUrl && !posterFailed ? (
@@ -119,6 +134,42 @@ function LibraryCard({
             <Typography variant="caption">Poster unavailable</Typography>
           </Stack>
         )}
+        {view === 'grid' ? (
+          <Stack
+            className="library-card-actions"
+            spacing={1.5}
+            justifyContent="center"
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              p: 3,
+              opacity: 0,
+              pointerEvents: 'none',
+              bgcolor: (theme) => alpha(theme.palette.background.default, 0.85),
+              transition: 'opacity 160ms ease',
+            }}
+          >
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={next === 'WATCHED' ? <CheckCircleRoundedIcon /> : undefined}
+              onClick={() => onStatus(item)}
+            >
+              {next === 'WATCHED' ? 'Watched' : 'Pending'}
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              color="inherit"
+              startIcon={<DeleteOutlineRoundedIcon />}
+              aria-label={`Remove ${item.title}`}
+              onClick={() => onRemove(item)}
+              sx={{ bgcolor: 'action.selected', '&:hover': { bgcolor: 'action.hover' } }}
+            >
+              Remove
+            </Button>
+          </Stack>
+        ) : null}
       </Box>
       <Stack spacing={1} sx={{ p: 1.5, minWidth: 0, flexGrow: 1 }}>
         <Box>
@@ -137,24 +188,24 @@ function LibraryCard({
             size="small"
             color={item.status === 'WATCHLIST' ? 'primary' : 'default'}
           />
-          <Chip label="Shared" size="small" variant="outlined" />
-          <Chip label="Recommended" size="small" variant="outlined" />
           {item.manualCategories.map((category) => (
             <Chip key={category} label={category} size="small" variant="outlined" />
           ))}
         </Stack>
-        <Stack direction="row" spacing={1} sx={{ mt: 'auto' }}>
-          <Button size="small" onClick={() => onStatus(item)}>
-            Mark as {next === 'WATCHED' ? 'watched' : 'pending'}
-          </Button>
-          <IconButton
-            aria-label={`Remove ${item.title}`}
-            onClick={() => onRemove(item)}
-            size="small"
-          >
-            <DeleteOutlineRoundedIcon />
-          </IconButton>
-        </Stack>
+        {view === 'list' ? (
+          <Stack direction="row" spacing={1} sx={{ mt: 'auto' }}>
+            <Button size="small" onClick={() => onStatus(item)}>
+              {next === 'WATCHED' ? 'Watched' : 'Pending'}
+            </Button>
+            <IconButton
+              aria-label={`Remove ${item.title}`}
+              onClick={() => onRemove(item)}
+              size="small"
+            >
+              <DeleteOutlineRoundedIcon />
+            </IconButton>
+          </Stack>
+        ) : null}
       </Stack>
     </Box>
   );
@@ -178,6 +229,8 @@ export function LibraryPage() {
   const [page, setPage] = useState(1);
   const [drawer, setDrawer] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<LibraryItem>();
+  const [experienceTarget, setExperienceTarget] = useState<LibraryItem>();
+  const [pendingTarget, setPendingTarget] = useState<LibraryItem>();
   const [view, setView] = useState<View>(() =>
     localStorage.getItem('popcorn-time-library-view') === 'list' ? 'list' : 'grid',
   );
@@ -215,7 +268,11 @@ export function LibraryPage() {
     ],
     [movieGenres.data, tvGenres.data],
   );
-  const refresh = () => void queryClient.invalidateQueries({ queryKey: ['library'] });
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['library'] });
+    void queryClient.invalidateQueries({ queryKey: ['library-membership'] });
+    void queryClient.invalidateQueries({ queryKey: ['catalog-detail'] });
+  };
   const statusChange = useMutation({
     mutationFn: ({ id, next }: { id: string; next: LibraryStatus }) =>
       updateLibraryStatus(id, next),
@@ -225,6 +282,19 @@ export function LibraryPage() {
     mutationFn: removeLibraryItem,
     onSuccess: () => {
       setRemoveTarget(undefined);
+      refresh();
+    },
+  });
+  const saveExperience = useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: Parameters<typeof saveLibraryExperience>[1];
+    }) => saveLibraryExperience(id, input),
+    onSuccess: () => {
+      setExperienceTarget(undefined);
       refresh();
     },
   });
@@ -469,10 +539,9 @@ export function LibraryPage() {
                   item={item}
                   view={view}
                   onStatus={(selected) =>
-                    statusChange.mutate({
-                      id: selected.id,
-                      next: selected.status === 'WATCHLIST' ? 'WATCHED' : 'WATCHLIST',
-                    })
+                    selected.status === 'WATCHLIST'
+                      ? setExperienceTarget(selected)
+                      : setPendingTarget(selected)
                   }
                   onRemove={setRemoveTarget}
                 />
@@ -514,6 +583,51 @@ export function LibraryPage() {
             onClick={() => removeTarget && remove.mutate(removeTarget.id)}
           >
             Remove
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <ExperienceDialog
+        item={experienceTarget}
+        open={Boolean(experienceTarget)}
+        saving={saveExperience.isPending}
+        error={
+          saveExperience.isError
+            ? 'We could not save your experience. Please try again.'
+            : undefined
+        }
+        onClose={() => setExperienceTarget(undefined)}
+        onSave={(input) =>
+          experienceTarget && saveExperience.mutate({ id: experienceTarget.id, input })
+        }
+      />
+      <Dialog
+        open={Boolean(pendingTarget)}
+        onClose={statusChange.isPending ? undefined : () => setPendingTarget(undefined)}
+        aria-labelledby="move-to-pending-title"
+      >
+        <DialogTitle id="move-to-pending-title">Move to Pending?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This permanently removes your personal rating, private comment, and watched date.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPendingTarget(undefined)} disabled={statusChange.isPending}>
+            Cancel
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            disabled={statusChange.isPending}
+            onClick={() =>
+              pendingTarget &&
+              statusChange.mutate(
+                { id: pendingTarget.id, next: 'WATCHLIST' },
+                { onSuccess: () => setPendingTarget(undefined) },
+              )
+            }
+          >
+            Move to pending
           </Button>
         </DialogActions>
       </Dialog>

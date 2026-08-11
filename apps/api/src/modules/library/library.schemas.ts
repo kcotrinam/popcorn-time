@@ -17,6 +17,26 @@ export const createLibraryItemSchema = z
   })
   .strict();
 export const updateLibraryItemSchema = z.object({ status }).strict();
+const experienceRatingSchema = z
+  .number()
+  .min(1)
+  .max(10)
+  .refine((value) => Number.isInteger(value * 2), 'Rating must use 0.5 increments');
+export const saveLibraryExperienceSchema = z
+  .object({
+    rating: experienceRatingSchema.nullable().optional(),
+    comment: z
+      .string()
+      .trim()
+      .max(2000)
+      .nullable()
+      .optional()
+      .transform((value) => value || null),
+    watchedAt: z.coerce
+      .date()
+      .refine((value) => value <= new Date(), 'Watched date cannot be in the future'),
+  })
+  .strict();
 const optionalText = (maxLength: number) =>
   z
     .string()
@@ -97,6 +117,7 @@ export const libraryMembershipQuerySchema = z
 export type CreateLibraryItemInput = z.infer<typeof createLibraryItemSchema>;
 export type CreateManualLibraryItemInput = z.infer<typeof createManualLibraryItemSchema>;
 export type UpdateLibraryItemInput = z.infer<typeof updateLibraryItemSchema>;
+export type SaveLibraryExperienceInput = z.infer<typeof saveLibraryExperienceSchema>;
 export type LibraryItemParams = z.infer<typeof libraryItemParamsSchema>;
 export type LibraryQuery = z.infer<typeof libraryQuerySchema>;
 export type LibraryMembershipQuery = z.infer<typeof libraryMembershipQuerySchema>;

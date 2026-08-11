@@ -7,6 +7,7 @@ import {
   libraryItemParamsSchema,
   libraryMembershipQuerySchema,
   libraryQuerySchema,
+  saveLibraryExperienceSchema,
   updateLibraryItemSchema,
 } from './library.schemas.js';
 
@@ -19,6 +20,7 @@ type LibraryController = {
   update: RequestHandler;
   remove: RequestHandler;
   memberships: RequestHandler;
+  saveExperience: RequestHandler;
 };
 export const libraryController: LibraryController = {
   create: (async (req, res) => {
@@ -51,6 +53,16 @@ export const libraryController: LibraryController = {
         user.id,
         libraryItemParamsSchema.parse(req.params),
         updateLibraryItemSchema.parse(req.body),
+      ),
+    );
+  }) satisfies RequestHandler,
+  saveExperience: (async (req, res) => {
+    const user = await currentUser(req);
+    res.json(
+      await libraryService.saveExperience(
+        user.id,
+        libraryItemParamsSchema.parse(req.params),
+        saveLibraryExperienceSchema.parse(req.body),
       ),
     );
   }) satisfies RequestHandler,
