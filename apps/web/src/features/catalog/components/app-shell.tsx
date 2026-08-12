@@ -32,7 +32,7 @@ const items = [
   { label: 'Explore', icon: <MovieFilterRoundedIcon />, to: '/explore' },
   { label: 'My Library', icon: <VideoLibraryRoundedIcon />, to: '/library' },
   { label: 'Shared', icon: <PeopleOutlineRoundedIcon /> },
-  { label: 'Recommendations', icon: <RecommendRoundedIcon /> },
+  { label: 'Recommendations', icon: <RecommendRoundedIcon />, to: '/recommendations' },
   { label: 'Notifications', icon: <NotificationsNoneRoundedIcon /> },
 ];
 function Menu() {

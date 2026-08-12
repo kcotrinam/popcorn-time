@@ -16,7 +16,11 @@ function requiresCsrf(path: string, method: string): boolean {
   return (
     method !== 'GET' &&
     method !== 'HEAD' &&
-    (path === '/auth/refresh' || path === '/auth/logout' || path.startsWith('/users/me/library'))
+    (path === '/auth/refresh' ||
+      path === '/auth/logout' ||
+      path.startsWith('/users/me/library') ||
+      path === '/users/me/username' ||
+      path.startsWith('/recommendations'))
   );
 }
 

@@ -23,3 +23,7 @@ TMDB catalog content is not copied into PostgreSQL during Phase 2. The API fetch
 ## Migration history
 
 Create a new Prisma migration for every schema change. Never rewrite an applied migration; preserve migration history and inspect generated SQL before applying it.
+
+## Direct recommendations
+
+`recommendations` stores a sender-to-recipient TMDB reference, trusted title/poster/year snapshot, state, and acceptance time. A unique sender/recipient/content key prevents repeated pending or accepted sends; rejection hard-deletes the row so it can be sent again. Recommendation ownership never reveals a recipient's library data.

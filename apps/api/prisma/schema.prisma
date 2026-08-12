@@ -44,9 +44,37 @@ model User {
   passwordResetTokens PasswordResetToken[]
   externalIdentities ExternalIdentity[]
   libraryItems       UserMedia[]
+  sentRecommendations Recommendation[] @relation("RecommendationSender")
+  receivedRecommendations Recommendation[] @relation("RecommendationRecipient")
 
   @@index([deletedAt], map: "users_deleted_at_idx")
   @@map("users")
+}
+
+enum RecommendationStatus {
+  PENDING
+  ACCEPTED
+}
+
+model Recommendation {
+  id String @id @default(uuid()) @db.Uuid
+  senderId String @map("sender_id") @db.Uuid
+  recipientId String @map("recipient_id") @db.Uuid
+  provider String @default("tmdb") @db.VarChar(50)
+  externalId Int @map("external_id")
+  mediaType String @map("media_type") @db.VarChar(16)
+  title String @db.VarChar(500)
+  posterUrl String? @map("poster_url")
+  releaseYear Int? @map("release_year")
+  status RecommendationStatus @default(PENDING)
+  createdAt DateTime @default(now()) @map("created_at")
+  acceptedAt DateTime? @map("accepted_at")
+  sender User @relation("RecommendationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("RecommendationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  @@unique([senderId, recipientId, provider, externalId, mediaType], map: "recommendations_sender_recipient_content_key")
+  @@index([recipientId, status, createdAt], map: "recommendations_recipient_status_created_at_idx")
+  @@index([senderId, status, createdAt], map: "recommendations_sender_status_created_at_idx")
+  @@map("recommendations")
 }
 
 model UserMedia {

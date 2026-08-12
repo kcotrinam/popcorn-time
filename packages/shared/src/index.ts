@@ -22,3 +22,11 @@ export type {
   SaveLibraryExperienceInput,
   UpdateLibraryItemInput,
 } from './contracts/library.js';
+export type {
+  AcceptRecommendationResult,
+  Recommendation,
+  RecommendationPage,
+  RecommendationStatus,
+  RecommendationDirection,
+  PublicUser,
+} from './contracts/recommendation.js';

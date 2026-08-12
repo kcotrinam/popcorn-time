@@ -15,6 +15,8 @@ import { createHealthRouter } from './modules/health/health.routes.js';
 import { createAuthRouter } from './modules/auth/auth.routes.js';
 import { createCatalogRouter } from './modules/catalog/catalog.routes.js';
 import { createLibraryRouter } from './modules/library/library.routes.js';
+import { createUsersRouter } from './modules/users/users.routes.js';
+import { createRecommendationsRouter } from './modules/recommendations/recommendations.routes.js';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -32,6 +34,8 @@ export function createApp(): Express {
   api.use(createAuthRouter());
   api.use(createCatalogRouter());
   api.use(createLibraryRouter());
+  api.use(createUsersRouter());
+  api.use(createRecommendationsRouter());
   app.use(`/${env.API_PREFIX}`, api);
   app.get('/api/docs/openapi.json', (_req, res) => res.json(openapiSpec));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));

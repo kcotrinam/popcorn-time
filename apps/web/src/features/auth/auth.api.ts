@@ -9,8 +9,12 @@ export type CurrentUser = {
   theme: string;
 };
 export const getCurrentUser = async () => (await getJson<{ user: CurrentUser }>('/users/me')).user;
-export const register = (input: { email: string; password: string; displayName: string }) =>
-  postJson<{ message: string }>('/auth/register', input);
+export const register = (input: {
+  email: string;
+  password: string;
+  displayName: string;
+  username: string;
+}) => postJson<{ message: string }>('/auth/register', input);
 export const login = async (input: { email: string; password: string }) =>
   (await postJson<{ user: CurrentUser }>('/auth/login', input)).user;
 export const verifyEmail = (token: string) => postJson<void>('/auth/verify-email', { token });

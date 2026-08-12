@@ -17,8 +17,19 @@ import { CatalogDetailPage } from '@/features/catalog/pages/catalog-detail-page'
 import { LibraryPage } from '@/features/library/pages/library-page';
 import { ManualRegistrationPage } from '@/features/library/pages/manual-registration-page';
 import { HomePage } from '@/features/home/pages/home-page';
+import { RecommendationsPage } from '@/features/recommendations/pages/recommendations-page';
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
+  {
+    path: '/recommendations',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <RecommendationsPage />
+        </AppShell>
+      </ProtectedRoute>
+    ),
+  },
   {
     path: '/sign-in',
     element: (

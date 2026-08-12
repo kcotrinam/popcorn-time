@@ -2,10 +2,17 @@ import { z } from 'zod';
 
 const email = z.string().trim().email().max(254);
 const password = z.string().min(12).max(128);
+export const usernameSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(30)
+  .regex(/^[A-Za-z0-9_]+$/, 'Username may use letters, numbers, and underscores only');
 export const registerSchema = z.object({
   email,
   password,
   displayName: z.string().trim().min(1).max(80),
+  username: usernameSchema,
 });
 export const loginSchema = z.object({ email, password: z.string().min(1).max(128) });
 export const tokenSchema = z.object({ token: z.string().min(32).max(512) });

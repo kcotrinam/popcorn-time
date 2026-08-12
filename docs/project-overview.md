@@ -10,7 +10,8 @@ Popcorn Time is a family-oriented, multi-user media manager for movies, TV serie
 - An authenticated Explore experience at `/explore`, including search, discovery filters, responsive catalog cards, and catalog detail pages at `/explore/:type/:id`.
 - A private `/library` for Pending and Watched TMDB references, with search, filters, sorting, pagination, view preference, status changes, removal, and owner-private ratings/comments.
 - An authenticated `/home` dashboard with recent Pending and Recently Watched library items, library-only search, and intentional empty states for deferred recommendations and shared plans.
+- Private direct recommendations by exact username, with received/sent views and recipient-controlled acceptance into Pending.
 
 ## Deferred scope
 
-The following are intentionally deferred: recommendations, shared viewing plans, notifications, Google OAuth, a mobile app, and internationalization (i18n).
+The following are intentionally deferred: shared viewing plans, notifications, Google OAuth, a mobile app, and internationalization (i18n).

@@ -8,4 +8,6 @@ The protected personal library follows `Router → Controller → Service → Re
 
 The authenticated Home dashboard reads the same protected personal-library endpoint through independent client queries. A library query supplied in `/library?query=...` is an all-status search so results from both Pending and Watched are visible; ordinary library tabs continue to filter by their selected status.
 
+Private user recommendations follow `Router → Controller → Service → Repository → Prisma`. A sender resolves a trusted TMDB snapshot at creation; only the recipient can atomically accept it into their private library or delete a pending recommendation. Public identity lookup is exact, authenticated, rate-limited, and returns only verified active users' display identity.
+
 Private experiences are stored on the owner-scoped `user_media` row. The authenticated, CSRF-protected experience endpoint atomically records an optional half-point personal rating, optional private comment, watched timestamp, and `WATCHED` status. Moving an item back to Pending atomically clears every experience field.

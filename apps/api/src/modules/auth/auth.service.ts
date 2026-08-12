@@ -14,6 +14,7 @@ const generic = 'If the account is eligible, an email will be sent shortly.';
 const tokenHash = (token: string) => createHash('sha256').update(token).digest('hex');
 const rawToken = () => randomBytes(32).toString('base64url');
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
+const normalizeUsername = (username: string) => username.trim().toLowerCase();
 const safeUser = (user: User) => ({
   id: user.id,
   email: user.email,
@@ -93,6 +94,8 @@ export const authService = {
       emailNormalized,
       passwordHash: await this.hashPassword(input.password),
       displayName: input.displayName,
+      username: input.username.trim(),
+      usernameNormalized: normalizeUsername(input.username),
     });
     await createAndSendVerificationToken(user);
     return generic;

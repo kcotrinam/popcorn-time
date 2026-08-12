@@ -11,11 +11,15 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '@/features/auth/auth.api';
 import { getLibrary } from '@/features/library/library.api';
+import {
+  getRecommendations,
+  acceptRecommendation,
+} from '@/features/recommendations/recommendations.api';
 import { DashboardLibraryCard } from '../components/dashboard-library-card';
 import { DashboardSection } from '../components/dashboard-section';
 
@@ -75,6 +79,22 @@ export function HomePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const user = useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser });
+  const recommendations = useQuery({
+    queryKey: ['recommendations', 'home'],
+    queryFn: ({ signal }) =>
+      getRecommendations(
+        { direction: 'received', status: 'PENDING', page: 1, pageSize: 3 },
+        signal,
+      ),
+  });
+  const queryClient = useQueryClient();
+  const accept = useMutation({
+    mutationFn: acceptRecommendation,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['recommendations'] });
+      void queryClient.invalidateQueries({ queryKey: ['library'] });
+    },
+  });
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = search.trim();
@@ -118,8 +138,69 @@ export function HomePage() {
             }
           />
         </DashboardSection>
-        <DashboardSection title="Recommended for you">
-          <Typography color="text.secondary">No recommendations for you yet.</Typography>
+        <DashboardSection
+          title={
+            recommendations.data?.totalResults
+              ? `${recommendations.data.totalResults} new recommendation${recommendations.data.totalResults === 1 ? '' : 's'}`
+              : 'Recommendations'
+          }
+          action={{ label: 'View all', to: '/recommendations' }}
+        >
+          {recommendations.isLoading ? (
+            <Skeleton variant="rounded" width={300} height={160} />
+          ) : null}
+          {recommendations.isError ? (
+            <Alert
+              severity="error"
+              action={<Button onClick={() => void recommendations.refetch()}>Retry</Button>}
+            >
+              We could not load recommendations.
+            </Alert>
+          ) : null}
+          {recommendations.isError ? (
+            <Typography color="text.secondary">No recommendations for you yet.</Typography>
+          ) : null}
+          {!recommendations.isLoading &&
+          !recommendations.isError &&
+          !recommendations.data?.results.length ? (
+            <Typography color="text.secondary">No recommendations for you yet.</Typography>
+          ) : null}
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            {recommendations.data?.results.map((item) => (
+              <Box key={item.id} sx={{ display: 'flex', gap: 1.5, maxWidth: 360 }}>
+                <Box
+                  component="img"
+                  src={item.posterUrl ?? undefined}
+                  alt=""
+                  sx={{
+                    width: 64,
+                    height: 96,
+                    objectFit: 'cover',
+                    borderRadius: 1,
+                    bgcolor: 'background.paper',
+                  }}
+                />
+                <Box>
+                  <Typography fontWeight={700}>{item.title}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    From {item.sender?.displayName} (@{item.sender?.username})
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                    <Button size="small" variant="contained" onClick={() => accept.mutate(item.id)}>
+                      Add
+                    </Button>
+                    <Button
+                      size="small"
+                      component={RouterLink}
+                      to={`/explore/${item.mediaType}/${item.externalId}`}
+                    >
+                      Details
+                    </Button>
+                  </Stack>
+                </Box>
+              </Box>
+            ))}
+          </Stack>
         </DashboardSection>
         <DashboardSection title="Shared plans">
           <Typography color="text.secondary">No shared plans with you.</Typography>

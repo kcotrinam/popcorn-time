@@ -65,6 +65,60 @@ export const openapiSpec = {
         },
       },
     },
+    '/api/v1/users/me/username': {
+      put: {
+        summary: 'Set a username once for the authenticated account',
+        responses: {
+          '200': { description: 'Username set' },
+          '403': { description: 'CSRF failed' },
+          '409': { description: 'Already set or unavailable' },
+        },
+      },
+    },
+    '/api/v1/users/lookup': {
+      get: {
+        summary: 'Look up one active verified user by exact username',
+        parameters: [{ name: 'username', in: 'query', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'Public display identity or null' },
+          '429': { description: 'Rate limited' },
+        },
+      },
+    },
+    '/api/v1/recommendations': {
+      get: {
+        summary: 'List sent or received private recommendations',
+        responses: { '200': { description: 'Paginated recommendations' } },
+      },
+      post: {
+        summary: 'Send a private TMDB recommendation',
+        responses: {
+          '201': { description: 'Created' },
+          '403': { description: 'CSRF failed' },
+          '409': { description: 'Duplicate recommendation' },
+        },
+      },
+    },
+    '/api/v1/recommendations/{id}/accept': {
+      post: {
+        summary: 'Accept a received recommendation into Pending',
+        responses: {
+          '200': { description: 'Accepted with library result' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not received' },
+        },
+      },
+    },
+    '/api/v1/recommendations/{id}': {
+      delete: {
+        summary: 'Decline a received pending recommendation',
+        responses: {
+          '204': { description: 'Deleted' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not pending or not received' },
+        },
+      },
+    },
     '/api/v1/users/me/library': {
       get: {
         summary: 'List the authenticated user library',

@@ -8,6 +8,7 @@ export function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const mutation = useMutation({ mutationFn: register });
   return (
     <AuthLayout>
@@ -23,7 +24,7 @@ export function SignUpPage() {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              mutation.mutate({ email, password, displayName });
+              mutation.mutate({ email, password, displayName, username });
             }}
           >
             <Stack spacing={2}>
@@ -32,6 +33,13 @@ export function SignUpPage() {
                 required
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
+              />
+              <TextField
+                label="Username"
+                required
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                helperText="3–30 letters, numbers, or underscores"
               />
               <TextField
                 label="Email"
