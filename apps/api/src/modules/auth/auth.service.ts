@@ -15,6 +15,7 @@ const tokenHash = (token: string) => createHash('sha256').update(token).digest('
 const rawToken = () => randomBytes(32).toString('base64url');
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 const normalizeUsername = (username: string) => username.trim().toLowerCase();
+const automaticallyVerifyLocalAccounts = env.NODE_ENV === 'development';
 const safeUser = (user: User) => ({
   id: user.id,
   email: user.email,
@@ -85,8 +86,10 @@ export const authService = {
     const emailNormalized = normalizeEmail(input.email);
     const existing = await authRepository.findUserByEmail(emailNormalized);
     if (existing) {
-      if (!existing.deletedAt && !existing.emailVerifiedAt)
-        await createAndSendVerificationToken(existing);
+      if (!existing.deletedAt && !existing.emailVerifiedAt) {
+        if (automaticallyVerifyLocalAccounts) await authRepository.verifyUser(existing.id);
+        else await createAndSendVerificationToken(existing);
+      }
       return generic;
     }
     const user = await authRepository.createUser({
@@ -97,7 +100,8 @@ export const authService = {
       username: input.username.trim(),
       usernameNormalized: normalizeUsername(input.username),
     });
-    await createAndSendVerificationToken(user);
+    if (automaticallyVerifyLocalAccounts) await authRepository.verifyUser(user.id);
+    else await createAndSendVerificationToken(user);
     return generic;
   },
   async verifyEmail(token: string) {
