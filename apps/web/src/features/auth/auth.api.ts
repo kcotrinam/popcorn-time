@@ -1,4 +1,4 @@
-import { getJson, postJson } from '@/services/http-client';
+import { getJson, postJson, putJson } from '@/services/http-client';
 export type CurrentUser = {
   id: string;
   email: string;
@@ -23,3 +23,5 @@ export const forgotPassword = (email: string) =>
 export const resetPassword = (token: string, password: string) =>
   postJson<void>('/auth/reset-password', { token, password });
 export const logout = () => postJson<void>('/auth/logout');
+export const setupUsername = (username: string) =>
+  putJson<{ username: string }>('/users/me/username', { username });

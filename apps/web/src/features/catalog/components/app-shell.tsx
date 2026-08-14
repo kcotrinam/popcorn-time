@@ -1,5 +1,6 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MovieFilterRoundedIcon from '@mui/icons-material/MovieFilterRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
@@ -12,6 +13,7 @@ import {
   Box,
   Button,
   Drawer,
+  IconButton,
   List,
   ListItemButton,
   ListItemIcon,
@@ -22,10 +24,12 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { getCurrentUser } from '@/features/auth/auth.api';
+import { getCurrentUser, logout } from '@/features/auth/auth.api';
+import { UsernameSetupDialog } from '@/features/auth/components/username-setup-dialog';
+import { clearCsrfToken } from '@/services/http-client';
 
 const items = [
   { label: 'Home', icon: <HomeRoundedIcon />, to: '/home' },
@@ -62,7 +66,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const [moreOpen, setMoreOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const queryClient = useQueryClient();
   const { data: user } = useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser });
+  const signOut = () => {
+    setSigningOut(true);
+    void logout().finally(() => {
+      clearCsrfToken();
+      queryClient.clear();
+      window.location.assign('/sign-in');
+    });
+  };
   const sidebar = (
     <Stack height="100%" sx={{ p: 2 }}>
       <Typography variant="h6" fontWeight={800} sx={{ px: 1, mb: 2 }}>
@@ -80,7 +94,35 @@ export function AppShell({ children }: { children: ReactNode }) {
         Add content
       </Button>
       <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 2, px: 1 }}>
-        <Avatar src={user?.avatarUrl ?? undefined}>{user?.displayName?.[0]}</Avatar>
+        <Box
+          sx={{
+            position: 'relative',
+            width: 40,
+            height: 40,
+            '&:hover .sign-out-action, &:focus-within .sign-out-action': { opacity: 1 },
+          }}
+        >
+          <Avatar src={user?.avatarUrl ?? undefined}>{user?.displayName?.[0]}</Avatar>
+          <Tooltip title="Sign out">
+            <IconButton
+              className="sign-out-action"
+              aria-label="Sign out"
+              onClick={signOut}
+              disabled={signingOut}
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0,
+                color: 'common.white',
+                bgcolor: 'action.active',
+                transition: 'opacity 150ms ease',
+                '&:hover': { bgcolor: 'action.active' },
+              }}
+            >
+              <LogoutRoundedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
         <Box minWidth={0} flexGrow={1}>
           <Typography variant="body2" fontWeight={700} noWrap>
             {user?.displayName ?? 'User'}
@@ -171,6 +213,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Drawer>
         </>
       ) : null}
+      <UsernameSetupDialog open={Boolean(user && !user.username)} />
     </Box>
   );
 }
