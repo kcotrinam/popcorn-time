@@ -13,6 +13,7 @@
 - **Phase 4 — Personal ratings and private comments:** owner-private watched-date, rating, and comment experiences for library items.
 - **Phase 5 — Direct user-to-user recommendations:** usernames, trusted TMDB snapshots, private sending, acceptance into Pending, and Home integration.
 - **Phase 6 — Shared viewing plans:** TMDB movies and series, invitations, per-participant progress, and private Experience completion.
+- **Phase 7 — In-app notifications:** persistent inbox, atomic recommendation/shared-plan events, protected API, and responsive unread navigation badge.
 
 ## Later phases
 

@@ -18,6 +18,7 @@ import { createLibraryRouter } from './modules/library/library.routes.js';
 import { createUsersRouter } from './modules/users/users.routes.js';
 import { createRecommendationsRouter } from './modules/recommendations/recommendations.routes.js';
 import { createSharedPlansRouter } from './modules/shared-plans/shared-plans.routes.js';
+import { createNotificationsRouter } from './modules/notifications/notifications.routes.js';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -38,6 +39,7 @@ export function createApp(): Express {
   api.use(createUsersRouter());
   api.use(createRecommendationsRouter());
   api.use(createSharedPlansRouter());
+  api.use(createNotificationsRouter());
   app.use(`/${env.API_PREFIX}`, api);
   app.get('/api/docs/openapi.json', (_req, res) => res.json(openapiSpec));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));

@@ -119,6 +119,50 @@ export const openapiSpec = {
         },
       },
     },
+    '/api/v1/notifications': {
+      get: {
+        summary: 'List the authenticated recipient notification inbox',
+        responses: { '200': { description: 'Paginated notifications' } },
+      },
+    },
+    '/api/v1/notifications/unread-count': {
+      get: {
+        summary: 'Get the authenticated recipient unread notification count',
+        responses: { '200': { description: 'Unread count' } },
+      },
+    },
+    '/api/v1/notifications/{id}/read': {
+      patch: {
+        summary: 'Mark one notification as read',
+        responses: {
+          '204': { description: 'Marked read' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not found' },
+        },
+      },
+    },
+    '/api/v1/notifications/read-all': {
+      post: {
+        summary: 'Mark all recipient notifications as read',
+        responses: { '204': { description: 'Marked read' }, '403': { description: 'CSRF failed' } },
+      },
+    },
+    '/api/v1/notifications/read': {
+      delete: {
+        summary: 'Clear recipient read notifications',
+        responses: { '204': { description: 'Cleared' }, '403': { description: 'CSRF failed' } },
+      },
+    },
+    '/api/v1/notifications/{id}': {
+      delete: {
+        summary: 'Delete one recipient notification',
+        responses: {
+          '204': { description: 'Deleted' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Not found' },
+        },
+      },
+    },
     '/api/v1/users/me/library': {
       get: {
         summary: 'List the authenticated user library',

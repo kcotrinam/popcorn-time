@@ -31,3 +31,7 @@ Create a new Prisma migration for every schema change. Never rewrite an applied 
 ## Shared viewing plans
 
 `shared_plans` stores a trusted TMDB title snapshot, creator, lifecycle state, and terminal timestamps. `shared_plan_participants` uses a composite plan/user key and records invitation, role, and independent progress state. Rejection, leaving, and removal hard-delete only the participant record, preserving Library and Experience privacy. The service transactionally enforces the ten-user ceiling and recomputes status.
+
+## In-app notifications
+
+`notifications` is a persistent recipient-owned inbox storing structured event types, optional actor/resource references, a title snapshot, read timestamp, and a unique deterministic deduplication key. Recipient deletion cascades records; actor and resource deletion nulls their references so history remains usable. Recipient/read/creation indexes support inbox filtering and pagination.

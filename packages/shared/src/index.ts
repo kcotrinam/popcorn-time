@@ -42,3 +42,11 @@ export type {
   RecommendationDirection,
   PublicUser,
 } from './contracts/recommendation.js';
+export type {
+  NotificationActor,
+  NotificationItem,
+  NotificationPage,
+  NotificationResource,
+  NotificationType,
+  UnreadNotificationCount,
+} from './contracts/notification.js';

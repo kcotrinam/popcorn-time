@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   acceptRecommendation,
   getRecommendations,
@@ -22,7 +22,10 @@ import {
 } from '../recommendations.api';
 
 export function RecommendationsPage() {
-  const [direction, setDirection] = useState<'received' | 'sent'>('received');
+  const [searchParams] = useSearchParams();
+  const [direction, setDirection] = useState<'received' | 'sent'>(
+    searchParams.get('view') === 'sent' ? 'sent' : 'received',
+  );
   const [status, setStatus] = useState<'PENDING' | 'ACCEPTED'>();
   const [page, setPage] = useState(1);
   const client = useQueryClient();
@@ -34,6 +37,7 @@ export function RecommendationsPage() {
     void client.invalidateQueries({ queryKey: ['recommendations'] });
     void client.invalidateQueries({ queryKey: ['library'] });
     void client.invalidateQueries({ queryKey: ['home'] });
+    void client.invalidateQueries({ queryKey: ['notifications'] });
   };
   const accept = useMutation({ mutationFn: acceptRecommendation, onSuccess: refresh });
   const reject = useMutation({ mutationFn: rejectRecommendation, onSuccess: refresh });

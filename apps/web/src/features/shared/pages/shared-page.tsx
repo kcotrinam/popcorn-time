@@ -16,7 +16,10 @@ export function SharedPage() {
       if (action === 'accept') await acceptSharedPlan(id);
       else await declineOrLeaveSharedPlan(id);
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['shared-plans'] }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['shared-plans'] });
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
   });
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>

@@ -48,6 +48,7 @@ export function SharedPlanDetailPage() {
   const user = useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser });
   const refresh = () => {
     void client.invalidateQueries({ queryKey: ['shared-plans'] });
+    void client.invalidateQueries({ queryKey: ['notifications'] });
     void plan.refetch();
   };
   const action = useMutation({

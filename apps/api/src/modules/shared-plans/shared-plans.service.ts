@@ -9,6 +9,7 @@ import { AppError } from '../../errors/app-error.js';
 import { ErrorCode } from '../../errors/error-codes.js';
 import { prisma } from '../../lib/prisma.js';
 import { catalogService } from '../catalog/catalog.service.js';
+import { createNotification } from '../notifications/notification-events.js';
 import type {
   CompleteInput,
   CreatePlanInput,
@@ -176,6 +177,18 @@ export const sharedPlansService = {
         include: planInclude,
       });
       await ensureLibrary(tx, userId, created);
+      await Promise.all(
+        users.map((user) =>
+          createNotification(tx, {
+            recipientId: user.id,
+            actorId: userId,
+            type: 'SHARED_PLAN_INVITATION_RECEIVED',
+            sharedPlanId: created.id,
+            contentTitle: created.title,
+            deduplicationKey: `shared:invite:${created.id}:${user.id}`,
+          }),
+        ),
+      );
       return created;
     });
     return detail(result, userId);
@@ -242,6 +255,18 @@ export const sharedPlansService = {
       await tx.sharedPlanParticipant.createMany({
         data: users.map((u) => ({ planId: id, userId: u.id })),
       });
+      await Promise.all(
+        users.map((user) =>
+          createNotification(tx, {
+            recipientId: user.id,
+            actorId: userId,
+            type: 'SHARED_PLAN_INVITATION_RECEIVED',
+            sharedPlanId: id,
+            contentTitle: plan.title,
+            deduplicationKey: `shared:invite:${id}:${user.id}`,
+          }),
+        ),
+      );
     });
     return this.get(userId, id);
   },
@@ -265,6 +290,15 @@ export const sharedPlansService = {
             currentSeason: null,
             lastWatchedEpisode: null,
           },
+        });
+      if (member.invitationStatus === 'PENDING')
+        await createNotification(tx, {
+          recipientId: plan.creatorId,
+          actorId: userId,
+          type: 'SHARED_PLAN_INVITATION_ACCEPTED',
+          sharedPlanId: id,
+          contentTitle: plan.title,
+          deduplicationKey: `shared:accepted:${id}:${userId}`,
         });
       await ensureLibrary(tx, userId, plan);
       const participants = await tx.sharedPlanParticipant.findMany({ where: { planId: id } });
@@ -300,6 +334,14 @@ export const sharedPlansService = {
       if (!member) throw inaccessible();
       await tx.sharedPlanParticipant.delete({
         where: { planId_userId: { planId: id, userId: targetId } },
+      });
+      await createNotification(tx, {
+        recipientId: targetId === userId ? plan.creatorId : targetId,
+        actorId: userId,
+        type: targetId === userId ? 'SHARED_PLAN_MEMBER_LEFT' : 'SHARED_PLAN_MEMBER_REMOVED',
+        sharedPlanId: id,
+        contentTitle: plan.title,
+        deduplicationKey: `shared:${targetId === userId ? 'left' : 'removed'}:${id}:${targetId}`,
       });
       const participants = plan.participants.filter((p) => p.userId !== targetId);
       await tx.sharedPlan.update({
@@ -388,13 +430,52 @@ export const sharedPlansService = {
         where: { id },
         data: { status, completedAt: status === 'COMPLETED' ? new Date() : null },
       });
+      const otherAccepted = participants.filter(
+        (p) => p.userId !== userId && p.invitationStatus === 'ACCEPTED',
+      );
+      await Promise.all(
+        otherAccepted.map((p) =>
+          createNotification(tx, {
+            recipientId: p.userId,
+            actorId: userId,
+            type:
+              status === 'COMPLETED'
+                ? 'SHARED_PLAN_COMPLETED'
+                : 'SHARED_PLAN_PARTICIPANT_COMPLETED',
+            sharedPlanId: id,
+            contentTitle: plan.title,
+            deduplicationKey: `shared:${status === 'COMPLETED' ? 'completed' : 'participant-completed'}:${id}:${userId}:${p.userId}`,
+          }),
+        ),
+      );
     });
     return this.get(userId, id);
   },
   async cancel(userId: string, id: string) {
-    await prisma.sharedPlan.updateMany({
-      where: { id, creatorId: userId, status: { in: ['PENDING', 'ACTIVE'] } },
-      data: { status: 'CANCELLED', cancelledAt: new Date() },
+    await prisma.$transaction(async (tx) => {
+      const plan = await tx.sharedPlan.findFirst({
+        where: { id, creatorId: userId, status: { in: ['PENDING', 'ACTIVE'] } },
+        include: { participants: true },
+      });
+      if (!plan) throw inaccessible();
+      await tx.sharedPlan.update({
+        where: { id },
+        data: { status: 'CANCELLED', cancelledAt: new Date() },
+      });
+      await Promise.all(
+        plan.participants
+          .filter((p) => p.userId !== userId)
+          .map((p) =>
+            createNotification(tx, {
+              recipientId: p.userId,
+              actorId: userId,
+              type: 'SHARED_PLAN_CANCELLED',
+              sharedPlanId: id,
+              contentTitle: plan.title,
+              deduplicationKey: `shared:cancelled:${id}:${p.userId}`,
+            }),
+          ),
+      );
     });
     return this.get(userId, id);
   },

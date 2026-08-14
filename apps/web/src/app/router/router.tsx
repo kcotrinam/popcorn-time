@@ -20,7 +20,18 @@ import { HomePage } from '@/features/home/pages/home-page';
 import { RecommendationsPage } from '@/features/recommendations/pages/recommendations-page';
 import { SharedPage } from '@/features/shared/pages/shared-page';
 import { SharedPlanDetailPage } from '@/features/shared/pages/shared-plan-detail-page';
+import { NotificationsPage } from '@/features/notifications/pages/notifications-page';
 export const router = createBrowserRouter([
+  {
+    path: '/notifications',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <NotificationsPage />
+        </AppShell>
+      </ProtectedRoute>
+    ),
+  },
   { path: '/', element: <LandingPage /> },
   {
     path: '/shared',

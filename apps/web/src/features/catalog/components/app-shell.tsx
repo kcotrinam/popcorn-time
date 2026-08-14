@@ -4,6 +4,7 @@ import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MovieFilterRoundedIcon from '@mui/icons-material/MovieFilterRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
+import { Badge } from '@mui/material';
 import PeopleOutlineRoundedIcon from '@mui/icons-material/PeopleOutlineRounded';
 import RecommendRoundedIcon from '@mui/icons-material/RecommendRounded';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
@@ -30,6 +31,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { getCurrentUser, logout } from '@/features/auth/auth.api';
 import { UsernameSetupDialog } from '@/features/auth/components/username-setup-dialog';
 import { clearCsrfToken } from '@/services/http-client';
+import { getUnreadNotificationCount } from '@/features/notifications/notifications.api';
 
 const items = [
   { label: 'Home', icon: <HomeRoundedIcon />, to: '/home' },
@@ -37,9 +39,9 @@ const items = [
   { label: 'My Library', icon: <VideoLibraryRoundedIcon />, to: '/library' },
   { label: 'Shared', icon: <PeopleOutlineRoundedIcon />, to: '/shared' },
   { label: 'Recommendations', icon: <RecommendRoundedIcon />, to: '/recommendations' },
-  { label: 'Notifications', icon: <NotificationsNoneRoundedIcon /> },
+  { label: 'Notifications', icon: <NotificationsNoneRoundedIcon />, to: '/notifications' },
 ];
-function Menu() {
+function Menu({ unreadCount }: { unreadCount: number }) {
   const location = useLocation();
   return (
     <List>
@@ -53,7 +55,19 @@ function Menu() {
               to={item.to}
               sx={{ borderRadius: 1, mb: 0.5 }}
             >
-              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemIcon>
+                {item.label === 'Notifications' ? (
+                  <Badge
+                    badgeContent={unreadCount > 99 ? '99+' : unreadCount}
+                    color="primary"
+                    invisible={!unreadCount}
+                  >
+                    {item.icon}
+                  </Badge>
+                ) : (
+                  item.icon
+                )}
+              </ListItemIcon>
               <ListItemText primary={item.label} />
             </ListItemButton>
           </span>
@@ -69,6 +83,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [signingOut, setSigningOut] = useState(false);
   const queryClient = useQueryClient();
   const { data: user } = useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser });
+  const { data: notifications } = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: ({ signal }) => getUnreadNotificationCount(signal),
+    refetchOnWindowFocus: false,
+  });
   const signOut = () => {
     setSigningOut(true);
     void logout().finally(() => {
@@ -82,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Typography variant="h6" fontWeight={800} sx={{ px: 1, mb: 2 }}>
         Popcorn Time
       </Typography>
-      <Menu />
+      <Menu unreadCount={notifications?.unreadCount ?? 0} />
       <Box flexGrow={1} />
       <Button
         component={RouterLink}
@@ -208,7 +227,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Box>
           <Drawer anchor="bottom" open={moreOpen} onClose={() => setMoreOpen(false)}>
             <Box sx={{ p: 1.5 }}>
-              <Menu />
+              <Menu unreadCount={notifications?.unreadCount ?? 0} />
             </Box>
           </Drawer>
         </>

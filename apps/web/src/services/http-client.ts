@@ -21,7 +21,8 @@ function requiresCsrf(path: string, method: string): boolean {
       path.startsWith('/users/me/library') ||
       path === '/users/me/username' ||
       path.startsWith('/recommendations') ||
-      path.startsWith('/shared-plans'))
+      path.startsWith('/shared-plans') ||
+      path.startsWith('/notifications'))
   );
 }
 

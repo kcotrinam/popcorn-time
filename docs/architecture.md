@@ -13,3 +13,5 @@ Private user recommendations follow `Router → Controller → Service → Repos
 Private experiences are stored on the owner-scoped `user_media` row. The authenticated, CSRF-protected experience endpoint atomically records an optional half-point personal rating, optional private comment, watched timestamp, and `WATCHED` status. Moving an item back to Pending atomically clears every experience field.
 
 Shared viewing plans follow `Router → Controller → Service → Prisma` and use only trusted TMDB snapshots. Reads hide pending invitation identities from non-creators. Completing a participant writes their progress and owner-private Experience/library record atomically. TMDB season data is normalized and cached at the catalog boundary; specials and future episodes are excluded.
+
+In-app notifications follow `Router → Controller → Service → Repository → Prisma`. Records carry a structured event type, minimal title snapshot, resource reference, actor identity where available, and deterministic deduplication key. Recommendation and shared-plan mutations create notifications in their domain transaction; inbox operations are recipient-scoped.

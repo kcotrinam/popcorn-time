@@ -6,6 +6,10 @@ Popcorn Time is a family-oriented, multi-user media manager for movies, TV serie
 
 Shared plans let up to ten verified users watch a TMDB movie or series together. Plans retain a trusted title snapshot, keep pending invitations private, and record independent participant progress. Completion saves owner-private Experience data; ratings, comments, watched dates, and Library records are never shared.
 
+## In-app notifications
+
+The authenticated inbox persists important recommendation and shared-plan events. Each notification stores structured event metadata and a title snapshot, is written atomically with its domain mutation, and is visible only to its recipient. The product deliberately excludes email, browser, push, realtime delivery, and polling.
+
 ## Stack
 
 - Web: React, Vite, TypeScript, React Router, Material UI, TanStack Query
@@ -93,4 +97,4 @@ The partial username index is defined manually in `20260723000000_add_authentica
 
 ## Scope
 
-The current implementation includes internal users, custom authentication, the public TMDB-backed catalog, authenticated Explore, private Pending/Watched libraries, manual titles, and owner-private watched-date, rating, and comment experiences. Recommendations, shared plans, notifications, Google OAuth, a mobile app, and i18n remain future work.
+The current implementation includes internal users, custom authentication, the public TMDB-backed catalog, authenticated Explore, private Pending/Watched libraries, manual titles, owner-private watched-date/rating/comment experiences, recommendations, shared plans, and in-app notifications. Email, browser, push, realtime notifications, Google OAuth, a mobile app, and i18n remain future work.
