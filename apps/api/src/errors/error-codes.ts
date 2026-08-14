@@ -13,5 +13,6 @@ export const ErrorCode = {
   USERNAME_TAKEN: 'USERNAME_TAKEN',
   USERNAME_ALREADY_SET: 'USERNAME_ALREADY_SET',
   DUPLICATE_RECOMMENDATION: 'DUPLICATE_RECOMMENDATION',
+  SHARED_PLAN_LIMIT: 'SHARED_PLAN_LIMIT',
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

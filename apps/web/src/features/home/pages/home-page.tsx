@@ -22,6 +22,7 @@ import {
 } from '@/features/recommendations/recommendations.api';
 import { DashboardLibraryCard } from '../components/dashboard-library-card';
 import { DashboardSection } from '../components/dashboard-section';
+import { getSharedPlans } from '@/features/shared/shared-plans.api';
 
 const cardRowSx = {
   display: 'flex',
@@ -86,6 +87,10 @@ export function HomePage() {
         { direction: 'received', status: 'PENDING', page: 1, pageSize: 3 },
         signal,
       ),
+  });
+  const sharedPlans = useQuery({
+    queryKey: ['shared-plans', 'home'],
+    queryFn: ({ signal }) => getSharedPlans('active', signal),
   });
   const queryClient = useQueryClient();
   const accept = useMutation({
@@ -203,7 +208,44 @@ export function HomePage() {
           </Stack>
         </DashboardSection>
         <DashboardSection title="Shared plans">
-          <Typography color="text.secondary">No shared plans with you.</Typography>
+          {sharedPlans.isLoading ? <Skeleton variant="rounded" width={300} height={120} /> : null}
+          {sharedPlans.isError ? (
+            <Alert
+              severity="error"
+              action={<Button onClick={() => void sharedPlans.refetch()}>Retry</Button>}
+            >
+              We could not load shared plans.
+            </Alert>
+          ) : null}
+          {sharedPlans.isError ? (
+            <Typography color="text.secondary">No shared plans with you.</Typography>
+          ) : null}
+          {!sharedPlans.isLoading && !sharedPlans.isError && !sharedPlans.data?.results.length ? (
+            <Typography color="text.secondary">No shared plans with you.</Typography>
+          ) : null}
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            {sharedPlans.data?.results.slice(0, 2).map((plan) => (
+              <Button
+                key={plan.id}
+                component={RouterLink}
+                to={`/shared/${plan.id}`}
+                sx={{ justifyContent: 'flex-start', textAlign: 'left' }}
+              >
+                <Box
+                  component="img"
+                  src={plan.posterUrl ?? undefined}
+                  alt=""
+                  sx={{ width: 44, height: 66, objectFit: 'cover', borderRadius: 1, mr: 1 }}
+                />
+                {plan.title} · {plan.status}
+              </Button>
+            ))}
+          </Stack>
+          {sharedPlans.data && sharedPlans.data.totalResults > 2 ? (
+            <Button component={RouterLink} to="/shared">
+              View {sharedPlans.data.totalResults} shared plans
+            </Button>
+          ) : null}
         </DashboardSection>
         <DashboardSection
           title="Recently watched"

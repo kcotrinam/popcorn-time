@@ -46,9 +46,72 @@ model User {
   libraryItems       UserMedia[]
   sentRecommendations Recommendation[] @relation("RecommendationSender")
   receivedRecommendations Recommendation[] @relation("RecommendationRecipient")
+  createdSharedPlans SharedPlan[] @relation("SharedPlanCreator")
+  sharedPlanParticipants SharedPlanParticipant[]
 
   @@index([deletedAt], map: "users_deleted_at_idx")
   @@map("users")
+}
+
+enum SharedPlanStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+enum SharedPlanParticipantRole {
+  CREATOR
+  MEMBER
+}
+enum SharedPlanInvitationStatus {
+  PENDING
+  ACCEPTED
+}
+enum SharedPlanProgressStatus {
+  NOT_STARTED
+  WATCHING
+  WATCHED
+}
+
+model SharedPlan {
+  id String @id @default(uuid()) @db.Uuid
+  creatorId String @map("creator_id") @db.Uuid
+  provider String @default("tmdb") @db.VarChar(50)
+  externalId Int @map("external_id")
+  mediaType String @map("media_type") @db.VarChar(16)
+  title String @db.VarChar(500)
+  posterUrl String? @map("poster_url")
+  releaseYear Int? @map("release_year")
+  movieRuntimeMinutes Int? @map("movie_runtime_minutes")
+  status SharedPlanStatus @default(PENDING)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  completedAt DateTime? @map("completed_at")
+  cancelledAt DateTime? @map("cancelled_at")
+  creator User @relation("SharedPlanCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  participants SharedPlanParticipant[]
+  @@index([creatorId, status, createdAt], map: "shared_plans_creator_status_created_at_idx")
+  @@map("shared_plans")
+}
+
+model SharedPlanParticipant {
+  planId String @map("plan_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  role SharedPlanParticipantRole @default(MEMBER)
+  invitationStatus SharedPlanInvitationStatus @default(PENDING) @map("invitation_status")
+  progressStatus SharedPlanProgressStatus @default(NOT_STARTED) @map("progress_status")
+  movieMinute Int? @map("movie_minute")
+  currentSeason Int? @map("current_season")
+  lastWatchedEpisode Int? @map("last_watched_episode")
+  invitedAt DateTime @default(now()) @map("invited_at")
+  acceptedAt DateTime? @map("accepted_at")
+  progressUpdatedAt DateTime? @map("progress_updated_at")
+  completedAt DateTime? @map("completed_at")
+  plan SharedPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([planId, userId])
+  @@index([userId, invitationStatus, invitedAt], map: "shared_plan_participants_user_invitation_invited_at_idx")
+  @@map("shared_plan_participants")
 }
 
 enum RecommendationStatus {

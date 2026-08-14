@@ -1,7 +1,13 @@
 import { env } from '../../config/index.js';
 import { AppError } from '../../errors/app-error.js';
 import { ErrorCode } from '../../errors/error-codes.js';
-import type { TmdbDetail, TmdbGenresResponse, TmdbPage } from './tmdb.types.js';
+import type {
+  TmdbDetail,
+  TmdbGenresResponse,
+  TmdbPage,
+  TmdbSeason,
+  TmdbTvDetail,
+} from './tmdb.types.js';
 
 const baseUrl = 'https://api.themoviedb.org/3';
 export class TmdbNotFoundError extends Error {}
@@ -67,4 +73,7 @@ export const tmdbEndpoints = {
     tmdbClient.get<TmdbDetail>(`/${type}/${id}`, {
       append_to_response: 'credits,alternative_titles',
     }),
+  tvDetail: (id: number) => tmdbClient.get<TmdbTvDetail>(`/tv/${id}`),
+  season: (id: number, seasonNumber: number) =>
+    tmdbClient.get<TmdbSeason>(`/tv/${id}/season/${seasonNumber}`),
 };

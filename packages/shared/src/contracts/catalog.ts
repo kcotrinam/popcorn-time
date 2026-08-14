@@ -38,3 +38,26 @@ export type CatalogPage = {
   totalPages: number;
   totalResults: number;
 };
+
+export type CatalogSeason = {
+  seasonNumber: number;
+  name: string;
+  airDate: string | null;
+  posterUrl: string | null;
+  episodeCount: number;
+};
+
+export type CatalogEpisode = {
+  seasonNumber: number;
+  episodeNumber: number;
+  name: string;
+  airDate: string | null;
+  runtimeMinutes: number | null;
+  stillUrl: string | null;
+};
+
+export type CatalogSeasonEpisodes = {
+  seasonNumber: number;
+  airedEpisodeCount: number;
+  episodes: CatalogEpisode[];
+};

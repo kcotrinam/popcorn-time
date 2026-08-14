@@ -3,6 +3,8 @@ import type {
   CatalogGenre,
   CatalogMediaType,
   CatalogPage,
+  CatalogSeason,
+  CatalogSeasonEpisodes,
 } from '@popcorn-time/shared';
 import { getJson } from '@/services/http-client';
 import type { CatalogSort, ExploreTab } from './catalog.constants';
@@ -42,3 +44,7 @@ export const getGenres = async (type: CatalogMediaType, signal?: AbortSignal) =>
 
 export const getCatalogDetail = (type: CatalogMediaType, id: number, signal?: AbortSignal) =>
   getJson<CatalogDetail>(`/catalog/${type}/${id}`, { signal });
+export const getTvSeasons = (id: number, signal?: AbortSignal) =>
+  getJson<CatalogSeason[]>(`/catalog/tv/${id}/seasons`, { signal });
+export const getTvSeasonEpisodes = (id: number, seasonNumber: number, signal?: AbortSignal) =>
+  getJson<CatalogSeasonEpisodes>(`/catalog/tv/${id}/seasons/${seasonNumber}`, { signal });

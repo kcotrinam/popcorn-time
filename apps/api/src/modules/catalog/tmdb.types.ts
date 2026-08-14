@@ -38,3 +38,21 @@ export type TmdbDetail = TmdbResult & {
   };
   alternative_titles?: { titles?: Array<{ title?: string }> };
 };
+export type TmdbSeasonSummary = {
+  season_number?: number;
+  name?: string;
+  air_date?: string | null;
+  poster_path?: string | null;
+  episode_count?: number;
+};
+export type TmdbTvDetail = TmdbDetail & { seasons?: TmdbSeasonSummary[] };
+export type TmdbSeason = {
+  season_number?: number;
+  episodes?: Array<{
+    episode_number?: number;
+    name?: string;
+    air_date?: string | null;
+    runtime?: number | null;
+    still_path?: string | null;
+  }>;
+};

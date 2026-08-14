@@ -2,6 +2,10 @@
 
 Popcorn Time is a family-oriented, multi-user media manager for movies, TV series, anime, and documentaries. The repository includes the pnpm monorepo, React client, Express API, PostgreSQL/Prisma persistence, custom authentication, a public TMDB-backed catalog API, an authenticated Explore experience, observability, documentation, tests, and Docker workflow.
 
+## Shared viewing plans
+
+Shared plans let up to ten verified users watch a TMDB movie or series together. Plans retain a trusted title snapshot, keep pending invitations private, and record independent participant progress. Completion saves owner-private Experience data; ratings, comments, watched dates, and Library records are never shared.
+
 ## Stack
 
 - Web: React, Vite, TypeScript, React Router, Material UI, TanStack Query

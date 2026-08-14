@@ -20,7 +20,8 @@ function requiresCsrf(path: string, method: string): boolean {
       path === '/auth/logout' ||
       path.startsWith('/users/me/library') ||
       path === '/users/me/username' ||
-      path.startsWith('/recommendations'))
+      path.startsWith('/recommendations') ||
+      path.startsWith('/shared-plans'))
   );
 }
 

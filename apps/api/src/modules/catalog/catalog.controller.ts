@@ -2,6 +2,8 @@ import type { RequestHandler } from 'express';
 import { catalogService } from './catalog.service.js';
 import {
   detailParamsSchema,
+  tvSeasonParamsSchema,
+  tvSeasonsParamsSchema,
   discoverQuerySchema,
   genresQuerySchema,
   searchQuerySchema,
@@ -12,6 +14,8 @@ type CatalogController = {
   discover: RequestHandler;
   genres: RequestHandler;
   detail: RequestHandler;
+  seasons: RequestHandler;
+  seasonEpisodes: RequestHandler;
 };
 
 export const catalogController: CatalogController = {
@@ -30,5 +34,13 @@ export const catalogController: CatalogController = {
   detail: (async (req, res) =>
     res.json(
       await catalogService.detail(detailParamsSchema.parse(req.params)),
+    )) satisfies RequestHandler,
+  seasons: (async (req, res) =>
+    res.json(
+      await catalogService.seasons(tvSeasonsParamsSchema.parse(req.params)),
+    )) satisfies RequestHandler,
+  seasonEpisodes: (async (req, res) =>
+    res.json(
+      await catalogService.seasonEpisodes(tvSeasonParamsSchema.parse(req.params)),
     )) satisfies RequestHandler,
 };

@@ -4,6 +4,8 @@ import { validateRequest } from '../../middlewares/validate-request.js';
 import { catalogController } from './catalog.controller.js';
 import {
   detailParamsSchema,
+  tvSeasonParamsSchema,
+  tvSeasonsParamsSchema,
   discoverQuerySchema,
   genresQuerySchema,
   searchQuerySchema,
@@ -25,6 +27,16 @@ const catalogLimiter = rateLimit({
 export function createCatalogRouter(): RouterType {
   const router = Router();
   router.use('/catalog', catalogLimiter);
+  router.get(
+    '/catalog/tv/:id/seasons',
+    validateRequest({ params: tvSeasonsParamsSchema }),
+    catalogController.seasons,
+  );
+  router.get(
+    '/catalog/tv/:id/seasons/:seasonNumber',
+    validateRequest({ params: tvSeasonParamsSchema }),
+    catalogController.seasonEpisodes,
+  );
   router.get(
     '/catalog/search',
     validateRequest({ query: searchQuerySchema }),

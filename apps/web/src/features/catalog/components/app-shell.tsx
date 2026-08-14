@@ -35,7 +35,7 @@ const items = [
   { label: 'Home', icon: <HomeRoundedIcon />, to: '/home' },
   { label: 'Explore', icon: <MovieFilterRoundedIcon />, to: '/explore' },
   { label: 'My Library', icon: <VideoLibraryRoundedIcon />, to: '/library' },
-  { label: 'Shared', icon: <PeopleOutlineRoundedIcon /> },
+  { label: 'Shared', icon: <PeopleOutlineRoundedIcon />, to: '/shared' },
   { label: 'Recommendations', icon: <RecommendRoundedIcon />, to: '/recommendations' },
   { label: 'Notifications', icon: <NotificationsNoneRoundedIcon /> },
 ];

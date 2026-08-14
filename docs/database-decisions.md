@@ -27,3 +27,7 @@ Create a new Prisma migration for every schema change. Never rewrite an applied 
 ## Direct recommendations
 
 `recommendations` stores a sender-to-recipient TMDB reference, trusted title/poster/year snapshot, state, and acceptance time. A unique sender/recipient/content key prevents repeated pending or accepted sends; rejection hard-deletes the row so it can be sent again. Recommendation ownership never reveals a recipient's library data.
+
+## Shared viewing plans
+
+`shared_plans` stores a trusted TMDB title snapshot, creator, lifecycle state, and terminal timestamps. `shared_plan_participants` uses a composite plan/user key and records invitation, role, and independent progress state. Rejection, leaving, and removal hard-delete only the participant record, preserving Library and Experience privacy. The service transactionally enforces the ten-user ceiling and recomputes status.

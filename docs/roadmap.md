@@ -12,10 +12,10 @@
 - **Manual content registration:** private owner-scoped movie and series entries, fixed categories, optional HTTPS poster links, and library filtering.
 - **Phase 4 — Personal ratings and private comments:** owner-private watched-date, rating, and comment experiences for library items.
 - **Phase 5 — Direct user-to-user recommendations:** usernames, trusted TMDB snapshots, private sending, acceptance into Pending, and Home integration.
+- **Phase 6 — Shared viewing plans:** TMDB movies and series, invitations, per-participant progress, and private Experience completion.
 
 ## Later phases
 
-- **Phase 6 — Shared viewing plans:** TMDB movies and series, with future episode-level progress.
 - Extended account settings.
 - Production hardening.
 - Google OAuth.

@@ -38,6 +38,7 @@ import {
   updateLibraryStatus,
 } from '@/features/library/library.api';
 import { RecommendDialog } from '@/features/recommendations/components/recommend-dialog';
+import { CreateSharedPlanDialog } from '@/features/shared/components/create-shared-plan-dialog';
 
 const mediaLabels = { movie: 'Movie', tv: 'Series' } as const;
 const localDate = (value = new Date()) => {
@@ -141,6 +142,7 @@ export function CatalogDetailPage() {
   const [experienceComment, setExperienceComment] = useState('');
   const [experienceDate, setExperienceDate] = useState(localDate());
   const [recommendOpen, setRecommendOpen] = useState(false);
+  const [sharedOpen, setSharedOpen] = useState(false);
   const validParams = Boolean(mediaType && Number.isInteger(externalId) && externalId > 0);
   useEffect(() => setBackdropFailed(false), [mediaType, externalId]);
   const detail = useQuery({
@@ -403,6 +405,9 @@ export function CatalogDetailPage() {
                 onClick={() => setRecommendOpen(true)}
               >
                 Recommend
+              </Button>
+              <Button fullWidth variant="outlined" onClick={() => setSharedOpen(true)}>
+                Watch together
               </Button>
             </Stack>
             <Stack spacing={2.25} sx={{ pt: { sm: 2 } }}>
@@ -807,6 +812,7 @@ export function CatalogDetailPage() {
         />
       </Box>
       <RecommendDialog open={recommendOpen} onClose={() => setRecommendOpen(false)} item={item} />
+      <CreateSharedPlanDialog open={sharedOpen} onClose={() => setSharedOpen(false)} item={item} />
     </>
   );
 }

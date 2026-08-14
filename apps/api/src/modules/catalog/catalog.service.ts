@@ -1,12 +1,29 @@
-import type { CatalogDetail, CatalogGenre, CatalogPage } from '@popcorn-time/shared';
+import type {
+  CatalogDetail,
+  CatalogGenre,
+  CatalogPage,
+  CatalogSeason,
+  CatalogSeasonEpisodes,
+} from '@popcorn-time/shared';
 import { AppError } from '../../errors/app-error.js';
 import { ErrorCode } from '../../errors/error-codes.js';
 import { TtlCache } from './catalog.cache.js';
-import type { DetailParams, DiscoverQuery, GenresQuery, SearchQuery } from './catalog.schemas.js';
+import type {
+  DetailParams,
+  DiscoverQuery,
+  GenresQuery,
+  SearchQuery,
+  TvSeasonParams,
+  TvSeasonsParams,
+} from './catalog.schemas.js';
 import { normalizeDetail, normalizePage } from './catalog.repository.js';
 import { tmdbEndpoints, TmdbNotFoundError } from './tmdb.client.js';
-const cache = new TtlCache<CatalogPage | CatalogGenre[] | CatalogDetail>(60_000);
-const cached = async <T extends CatalogPage | CatalogGenre[] | CatalogDetail>(
+const cache = new TtlCache<
+  CatalogPage | CatalogGenre[] | CatalogDetail | CatalogSeason[] | CatalogSeasonEpisodes
+>(60_000);
+const cached = async <
+  T extends CatalogPage | CatalogGenre[] | CatalogDetail | CatalogSeason[] | CatalogSeasonEpisodes,
+>(
   key: string,
   loader: () => Promise<T>,
 ): Promise<T> => {
@@ -91,6 +108,73 @@ export const catalogService = {
       } catch (error) {
         if (error instanceof TmdbNotFoundError)
           throw new AppError(404, ErrorCode.NOT_FOUND, 'Catalog item was not found');
+        throw error;
+      }
+    });
+  },
+  async seasons(params: TvSeasonsParams): Promise<CatalogSeason[]> {
+    return cached(`tv-seasons:${params.id}`, async () => {
+      try {
+        const currentDate = new Date().toISOString().slice(0, 10);
+        return (
+          (await tmdbEndpoints.tvDetail(params.id)).seasons
+            ?.flatMap((season) =>
+              Number.isInteger(season.season_number) && season.season_number! > 0 && season.name
+                ? [
+                    {
+                      seasonNumber: season.season_number!,
+                      name: season.name,
+                      airDate: season.air_date ?? null,
+                      posterUrl: season.poster_path
+                        ? `https://image.tmdb.org/t/p/w500${season.poster_path}`
+                        : null,
+                      episodeCount: season.episode_count ?? 0,
+                    },
+                  ]
+                : [],
+            )
+            .filter((season) => !season.airDate || season.airDate <= currentDate) ?? []
+        );
+      } catch (error) {
+        if (error instanceof TmdbNotFoundError)
+          throw new AppError(404, ErrorCode.NOT_FOUND, 'Catalog item was not found');
+        throw error;
+      }
+    });
+  },
+  async seasonEpisodes(params: TvSeasonParams): Promise<CatalogSeasonEpisodes> {
+    return cached(`tv-season:${params.id}:${params.seasonNumber}`, async () => {
+      const seasons = await this.seasons({ id: params.id });
+      if (!seasons.some((season) => season.seasonNumber === params.seasonNumber))
+        throw new AppError(404, ErrorCode.NOT_FOUND, 'Season was not found');
+      try {
+        const currentDate = new Date().toISOString().slice(0, 10);
+        const episodes =
+          (await tmdbEndpoints.season(params.id, params.seasonNumber)).episodes?.flatMap(
+            (episode) =>
+              Number.isInteger(episode.episode_number) &&
+              episode.episode_number! > 0 &&
+              episode.name &&
+              episode.air_date &&
+              episode.air_date <= currentDate
+                ? [
+                    {
+                      seasonNumber: params.seasonNumber,
+                      episodeNumber: episode.episode_number!,
+                      name: episode.name,
+                      airDate: episode.air_date,
+                      runtimeMinutes: episode.runtime ?? null,
+                      stillUrl: episode.still_path
+                        ? `https://image.tmdb.org/t/p/w500${episode.still_path}`
+                        : null,
+                    },
+                  ]
+                : [],
+          ) ?? [];
+        return { seasonNumber: params.seasonNumber, airedEpisodeCount: episodes.length, episodes };
+      } catch (error) {
+        if (error instanceof TmdbNotFoundError)
+          throw new AppError(404, ErrorCode.NOT_FOUND, 'Season was not found');
         throw error;
       }
     });

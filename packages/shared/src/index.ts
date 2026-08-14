@@ -8,7 +8,19 @@ export type {
   CatalogMediaType,
   CatalogPage,
   CatalogProvider,
+  CatalogSeason,
+  CatalogEpisode,
+  CatalogSeasonEpisodes,
 } from './contracts/catalog.js';
+export type {
+  SharedPlan,
+  SharedPlanDetail,
+  SharedPlanParticipant,
+  SharedPlanPage,
+  SharedPlanStatus,
+  SharedPlanProgressStatus,
+  CreateSharedPlanInput,
+} from './contracts/shared-plan.js';
 export type {
   CreateLibraryItemInput,
   CreateManualLibraryItemInput,

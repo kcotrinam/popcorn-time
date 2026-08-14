@@ -18,8 +18,30 @@ import { LibraryPage } from '@/features/library/pages/library-page';
 import { ManualRegistrationPage } from '@/features/library/pages/manual-registration-page';
 import { HomePage } from '@/features/home/pages/home-page';
 import { RecommendationsPage } from '@/features/recommendations/pages/recommendations-page';
+import { SharedPage } from '@/features/shared/pages/shared-page';
+import { SharedPlanDetailPage } from '@/features/shared/pages/shared-plan-detail-page';
 export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
+  {
+    path: '/shared',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <SharedPage />
+        </AppShell>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/shared/:id',
+    element: (
+      <ProtectedRoute>
+        <AppShell>
+          <SharedPlanDetailPage />
+        </AppShell>
+      </ProtectedRoute>
+    ),
+  },
   {
     path: '/recommendations',
     element: (

@@ -28,7 +28,13 @@ export const detailParamsSchema = z.object({
   type: mediaType,
   id: z.coerce.number().int().positive(),
 });
+export const tvSeasonsParamsSchema = z.object({ id: z.coerce.number().int().positive() });
+export const tvSeasonParamsSchema = tvSeasonsParamsSchema.extend({
+  seasonNumber: z.coerce.number().int().positive(),
+});
 export type SearchQuery = z.infer<typeof searchQuerySchema>;
 export type DiscoverQuery = z.infer<typeof discoverQuerySchema>;
 export type GenresQuery = z.infer<typeof genresQuerySchema>;
 export type DetailParams = z.infer<typeof detailParamsSchema>;
+export type TvSeasonsParams = z.infer<typeof tvSeasonsParamsSchema>;
+export type TvSeasonParams = z.infer<typeof tvSeasonParamsSchema>;

@@ -11,3 +11,5 @@ The authenticated Home dashboard reads the same protected personal-library endpo
 Private user recommendations follow `Router → Controller → Service → Repository → Prisma`. A sender resolves a trusted TMDB snapshot at creation; only the recipient can atomically accept it into their private library or delete a pending recommendation. Public identity lookup is exact, authenticated, rate-limited, and returns only verified active users' display identity.
 
 Private experiences are stored on the owner-scoped `user_media` row. The authenticated, CSRF-protected experience endpoint atomically records an optional half-point personal rating, optional private comment, watched timestamp, and `WATCHED` status. Moving an item back to Pending atomically clears every experience field.
+
+Shared viewing plans follow `Router → Controller → Service → Prisma` and use only trusted TMDB snapshots. Reads hide pending invitation identities from non-creators. Completing a participant writes their progress and owner-private Experience/library record atomically. TMDB season data is normalized and cached at the catalog boundary; specials and future episodes are excluded.
