@@ -14,7 +14,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 const key = 'popcorn-time-theme-mode';
 
-const emeraldNocturne = {
+const quietScreeningRoom = {
   background: '#0f1412',
   surface: '#1c211e',
   surfaceHigh: '#262b29',
@@ -22,33 +22,81 @@ const emeraldNocturne = {
   onSurfaceVariant: '#bbcabf',
   outline: '#86948a',
   outlineVariant: '#3c4a42',
-  primary: '#4edea3',
-  onPrimary: '#003824',
-  secondary: '#4de082',
-  onSecondary: '#003919',
+  mint: '#4edea3',
+  mintHover: '#6ffbbe',
+  mintPressed: '#20bd80',
+  onMint: '#003824',
+  success: '#67d99a',
+  onSuccess: '#063d25',
+  warning: '#f0bd68',
+  onWarning: '#3a2600',
+  info: '#91bac5',
+  onInfo: '#0a343e',
   error: '#ffb4ab',
   onError: '#690005',
 } as const;
 
+const daylightScreeningRoom = {
+  background: '#edf3ee',
+  surface: '#f8fbf8',
+  surfaceHigh: '#e1ebe3',
+  onSurface: '#18201c',
+  onSurfaceVariant: '#425047',
+  outline: '#65736a',
+  outlineVariant: '#b9c7bd',
+  primary: '#006c43',
+  primaryLight: '#3d956a',
+  primaryDark: '#004c2d',
+  onPrimary: '#ffffff',
+  success: '#167a45',
+  onSuccess: '#ffffff',
+  warning: '#8a5a00',
+  onWarning: '#ffffff',
+  info: '#276b7a',
+  onInfo: '#ffffff',
+  error: '#ba1a1a',
+  onError: '#ffffff',
+} as const;
+
 function createAppTheme(mode: 'light' | 'dark') {
   const isDark = mode === 'dark';
+  const colors = isDark ? quietScreeningRoom : daylightScreeningRoom;
+  const primary = isDark
+    ? {
+        main: quietScreeningRoom.mint,
+        light: quietScreeningRoom.mintHover,
+        dark: quietScreeningRoom.mintPressed,
+        contrastText: quietScreeningRoom.onMint,
+      }
+    : {
+        main: daylightScreeningRoom.primary,
+        light: daylightScreeningRoom.primaryLight,
+        dark: daylightScreeningRoom.primaryDark,
+        contrastText: daylightScreeningRoom.onPrimary,
+      };
   return createTheme({
     palette: {
       mode,
-      primary: { main: emeraldNocturne.primary, contrastText: emeraldNocturne.onPrimary },
-      secondary: { main: emeraldNocturne.secondary, contrastText: emeraldNocturne.onSecondary },
+      primary,
+      secondary: { main: colors.success, contrastText: colors.onSuccess },
+      success: { main: colors.success, contrastText: colors.onSuccess },
+      warning: { main: colors.warning, contrastText: colors.onWarning },
+      info: { main: colors.info, contrastText: colors.onInfo },
       error: {
-        main: isDark ? emeraldNocturne.error : '#ba1a1a',
-        contrastText: isDark ? emeraldNocturne.onError : '#ffffff',
+        main: colors.error,
+        contrastText: colors.onError,
       },
-      background: isDark
-        ? { default: emeraldNocturne.background, paper: emeraldNocturne.surface }
-        : { default: emeraldNocturne.onSurface, paper: '#f5f8f5' },
-      text: isDark
-        ? { primary: emeraldNocturne.onSurface, secondary: emeraldNocturne.onSurfaceVariant }
-        : { primary: '#18201c', secondary: '#425047' },
-      divider: isDark ? emeraldNocturne.outlineVariant : '#b9c7bd',
-      action: { hover: isDark ? 'rgba(223, 228, 224, 0.08)' : 'rgba(0, 56, 36, 0.06)' },
+      background: { default: colors.background, paper: colors.surface },
+      text: { primary: colors.onSurface, secondary: colors.onSurfaceVariant },
+      divider: colors.outlineVariant,
+      action: {
+        active: colors.outline,
+        hover: isDark ? 'rgba(223, 228, 224, 0.08)' : 'rgba(0, 76, 45, 0.06)',
+        selected: isDark ? 'rgba(78, 222, 163, 0.16)' : 'rgba(0, 108, 67, 0.12)',
+        focus: isDark ? 'rgba(78, 222, 163, 0.2)' : 'rgba(0, 108, 67, 0.16)',
+        disabled: isDark ? '#7b8780' : '#78857c',
+        disabledBackground: isDark ? '#303a34' : '#d9e3db',
+      },
     },
     typography: {
       fontFamily:
@@ -70,7 +118,14 @@ function createAppTheme(mode: 'light' | 'dark') {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: isDark ? emeraldNocturne.background : emeraldNocturne.onSurface,
+            backgroundColor: colors.background,
+            colorScheme: mode,
+            '&::selection': {
+              backgroundColor: isDark ? 'rgba(78, 222, 163, 0.35)' : 'rgba(0, 108, 67, 0.22)',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: colors.outlineVariant,
+            },
           },
         },
       },
@@ -78,13 +133,21 @@ function createAppTheme(mode: 'light' | 'dark') {
         styleOverrides: {
           root: {
             backgroundImage: 'none',
-            border: `1px solid ${isDark ? emeraldNocturne.outlineVariant : '#b9c7bd'}`,
+            border: `1px solid ${colors.outlineVariant}`,
             boxShadow: 'none',
           },
         },
       },
       MuiButton: {
-        styleOverrides: { containedPrimary: { '&:hover': { backgroundColor: '#6ffbbe' } } },
+        styleOverrides: {
+          containedPrimary: { '&:hover': { backgroundColor: primary.light } },
+          root: {
+            '&.Mui-focusVisible': {
+              outline: `2px solid ${colors.outline}`,
+              outlineOffset: 3,
+            },
+          },
+        },
       },
     },
   });

@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-15T00:00:00.000Z",
+  "title": "Design System: Popcorn Time",
+  "extensions": {
+    "colorMeta": {
+      "nocturne-green": {
+        "role": "neutral",
+        "displayName": "Nocturne Green",
+        "canonical": "#0f1412",
+        "tonalRamp": [
+          "#0f1412",
+          "#1c211e",
+          "#262b29",
+          "#3c4a42",
+          "#86948a",
+          "#bbcabf",
+          "#dfe4e0",
+          "#f5f8f5"
+        ]
+      },
+      "screening-surface": {
+        "role": "neutral",
+        "displayName": "Screening Surface",
+        "canonical": "#1c211e",
+        "tonalRamp": [
+          "#0f1412",
+          "#1c211e",
+          "#262b29",
+          "#3c4a42",
+          "#86948a",
+          "#bbcabf",
+          "#dfe4e0",
+          "#f5f8f5"
+        ]
+      },
+      "screening-mint": {
+        "role": "primary",
+        "displayName": "Screening Mint",
+        "canonical": "#4edea3",
+        "tonalRamp": [
+          "#003824",
+          "#006c48",
+          "#009b68",
+          "#22bd83",
+          "#4edea3",
+          "#6ffbbe",
+          "#a6ffd6",
+          "#e1fff0"
+        ]
+      },
+      "supporting-green": {
+        "role": "secondary",
+        "displayName": "Confirmation Green",
+        "canonical": "#67d99a",
+        "tonalRamp": [
+          "#003919",
+          "#006d35",
+          "#009a50",
+          "#20bc6a",
+          "#67d99a",
+          "#72f7a0",
+          "#a5ffc1",
+          "#e3ffea"
+        ]
+      },
+      "daylight-emerald": {
+        "role": "primary",
+        "displayName": "Daylight Emerald",
+        "canonical": "#006c43",
+        "tonalRamp": [
+          "#00321d",
+          "#004c2d",
+          "#006c43",
+          "#3d956a",
+          "#77bc95",
+          "#b7dcc4",
+          "#e1f0e5",
+          "#f8fbf8"
+        ]
+      },
+      "projection-amber": {
+        "role": "tertiary",
+        "displayName": "Projection Amber",
+        "canonical": "#f0bd68",
+        "tonalRamp": [
+          "#3a2600",
+          "#654300",
+          "#8a5a00",
+          "#b27a16",
+          "#f0bd68",
+          "#f8d9a0",
+          "#fff0d0",
+          "#fffaf0"
+        ]
+      },
+      "cool-cue": {
+        "role": "secondary",
+        "displayName": "Cool Cue",
+        "canonical": "#91bac5",
+        "tonalRamp": [
+          "#0a343e",
+          "#17515e",
+          "#276b7a",
+          "#4f8e9f",
+          "#91bac5",
+          "#c2dce2",
+          "#e3f1f4",
+          "#f8fcfd"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Cinematic Display",
+        "purpose": "Rare landing-page statements and high-impact moments."
+      },
+      "headline": { "displayName": "Task Headline", "purpose": "Page-level task headings." },
+      "body": {
+        "displayName": "Screen-Readable Body",
+        "purpose": "Dense but calm product information."
+      },
+      "label": {
+        "displayName": "Compact Label",
+        "purpose": "Navigation, controls, filters, and metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "quiet-lift",
+        "value": "0 12px 32px rgba(0, 0, 0, 0.18)",
+        "purpose": "Approved soft ambient lift for interactive or transient surfaces; not used for base Paper at rest."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-transition",
+        "value": "150ms ease",
+        "purpose": "Existing opacity and interactive state transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "md",
+        "value": "900px",
+        "purpose": "Desktop sidebar and mobile navigation transition."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary forward action for product and landing flows.",
+      "html": "<button class=\"ds-btn-primary\">Add to library</button>",
+      "css": ".ds-btn-primary { min-height: 46px; padding: 0 24px; border: 0; border-radius: 8px; background: #4edea3; color: #003824; font: 500 0.875rem/1.43 Inter, system-ui, sans-serif; letter-spacing: 0.01em; cursor: pointer; transition: background 150ms ease, transform 150ms ease, box-shadow 150ms ease; } .ds-btn-primary:hover { background: #6ffbbe; transform: translateY(-1px); box-shadow: 0 12px 32px rgba(0,0,0,0.18); } .ds-btn-primary:focus-visible { outline: 2px solid #dfe4e0; outline-offset: 3px; }"
+    },
+    {
+      "name": "Outlined Button",
+      "kind": "button",
+      "refersTo": "button-outlined",
+      "description": "Secondary action that preserves task hierarchy on dark surfaces.",
+      "html": "<button class=\"ds-btn-outlined\">See how it works</button>",
+      "css": ".ds-btn-outlined { min-height: 46px; padding: 0 24px; border: 1px solid #3c4a42; border-radius: 8px; background: transparent; color: #dfe4e0; font: 500 0.875rem/1.43 Inter, system-ui, sans-serif; cursor: pointer; transition: border-color 150ms ease, background 150ms ease; } .ds-btn-outlined:hover { border-color: #86948a; background: rgba(223,228,224,0.08); } .ds-btn-outlined:focus-visible { outline: 2px solid #4edea3; outline-offset: 3px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "A compact surface-backed field for library and catalog search.",
+      "html": "<input class=\"ds-input-search\" placeholder=\"Search your library\" aria-label=\"Search your library\">",
+      "css": ".ds-input-search { width: 100%; min-height: 44px; padding: 0 14px; border: 1px solid #3c4a42; border-radius: 8px; background: #1c211e; color: #dfe4e0; font: 400 0.875rem/1.43 Inter, system-ui, sans-serif; } .ds-input-search::placeholder { color: #bbcabf; } .ds-input-search:hover { border-color: #86948a; } .ds-input-search:focus { border-color: #4edea3; outline: 2px solid rgba(78,222,163,0.24); outline-offset: 1px; }"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "navigation-item",
+      "description": "Icon-plus-label item for the desktop sidebar and mobile overflow navigation.",
+      "html": "<button class=\"ds-nav-item\"><span class=\"ds-nav-mark\">●</span> My Library</button>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #dfe4e0; font: 500 0.875rem/1.43 Inter, system-ui, sans-serif; text-align: left; cursor: pointer; } .ds-nav-mark { color: #4edea3; } .ds-nav-item:hover { background: rgba(223,228,224,0.08); } .ds-nav-item:focus-visible { outline: 2px solid #4edea3; outline-offset: 2px; }"
+    },
+    {
+      "name": "Screening Surface",
+      "kind": "card",
+      "refersTo": "paper-surface",
+      "description": "The default bordered container for private product content.",
+      "html": "<article class=\"ds-surface\"><strong>Shared plan</strong><p>Track this story together while keeping personal notes private.</p></article>",
+      "css": ".ds-surface { padding: 16px; border: 1px solid #3c4a42; border-radius: 8px; background: #1c211e; color: #dfe4e0; font: 400 1rem/1.5 Inter, system-ui, sans-serif; } .ds-surface strong { display: block; font-weight: 600; } .ds-surface p { margin: 8px 0 0; color: #bbcabf; font-size: 0.875rem; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "Compact choice control for content views and filters.",
+      "html": "<button class=\"ds-chip\" aria-pressed=\"true\">Pending</button>",
+      "css": ".ds-chip { min-height: 32px; padding: 0 12px; border: 1px solid #3c4a42; border-radius: 8px; background: #1c211e; color: #dfe4e0; font: 500 0.875rem/1.43 Inter, system-ui, sans-serif; cursor: pointer; } .ds-chip:hover { border-color: #86948a; } .ds-chip[aria-pressed=\"true\"] { border-color: #4edea3; background: #4edea3; color: #003824; } .ds-chip:focus-visible { outline: 2px solid #dfe4e0; outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Screening Room",
+    "overview": "Popcorn Time should feel like settling into a private screening room: dark, calm, and focused on the next story rather than a loud entertainment feed. The interface gives each user an orderly place for a personal collection while making shared tracking feel deliberate and close-knit.",
+    "keyCharacteristics": [
+      "Cinematic darkness with an organic green cast rather than neutral black.",
+      "Screening Mint reserved for decisive actions, active states, and meaningful progress.",
+      "High-legibility Inter typography with compact, confident hierarchy.",
+      "Border-led structure and soft ambient elevation for tactile interaction."
+    ],
+    "rules": [
+      {
+        "name": "The Screening Mint Rule",
+        "body": "Use Screening Mint to communicate selection, progress, and a clear next action. Do not flood an entire screen with it or introduce competing neon accents.",
+        "section": "colors"
+      },
+      {
+        "name": "The Screen-Readable Rule",
+        "body": "Keep labels in sentence case and let size and weight, not all-caps, create functional hierarchy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Lift Rule",
+        "body": "Base surfaces remain calm and structurally bordered. Reserve ambient elevation for interaction, hierarchy changes, and temporary overlays.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use Nocturne Green and Screening Surface to keep media and task content visually calm.",
+      "Do reserve Screening Mint for selection, progress, and actions that move a user forward.",
+      "Do preserve 8px rounding, sage borders, and sentence-case Inter labels across product workflows.",
+      "Do add only soft, diffuse elevation when an element becomes active, interactive, or transient."
+    ],
+    "donts": [
+      "Don't turn the interface into a neon entertainment feed or compete with Screening Mint using unrelated bright accents.",
+      "Don't hide structure by removing borders from every surface or piling hard shadows onto cards.",
+      "Don't use all-caps controls, generic dashboard density, glassmorphism, or exaggerated pill shapes as a substitute for hierarchy."
+    ]
+  }
+}
