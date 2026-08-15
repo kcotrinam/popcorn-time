@@ -13,6 +13,9 @@ import {
   Avatar,
   Box,
   Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Drawer,
   IconButton,
   List,
@@ -80,6 +83,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('md'));
   const [moreOpen, setMoreOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const queryClient = useQueryClient();
   const { data: user } = useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser });
@@ -98,9 +102,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
   const sidebar = (
     <Stack height="100%" sx={{ p: 2 }}>
-      <Typography variant="h6" fontWeight={800} sx={{ px: 1, mb: 2 }}>
-        Popcorn Time
-      </Typography>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ px: 1, mb: 2 }}
+      >
+        <Typography variant="h6" fontWeight={800}>
+          Popcorn Time
+        </Typography>
+        <Tooltip title="Account">
+          <IconButton aria-label="Open account options" onClick={() => setProfileOpen(true)}>
+            <Avatar src={user?.avatarUrl ?? undefined} sx={{ width: 32, height: 32 }}>
+              {user?.displayName?.[0]}
+            </Avatar>
+          </IconButton>
+        </Tooltip>
+      </Stack>
       <Menu unreadCount={notifications?.unreadCount ?? 0} />
       <Box flexGrow={1} />
       <Button
@@ -112,48 +130,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Add content
       </Button>
-      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 2, px: 1 }}>
-        <Box
-          sx={{
-            position: 'relative',
-            width: 40,
-            height: 40,
-            '&:hover .sign-out-action, &:focus-within .sign-out-action': { opacity: 1 },
-          }}
-        >
-          <Avatar src={user?.avatarUrl ?? undefined}>{user?.displayName?.[0]}</Avatar>
-          <Tooltip title="Sign out">
-            <IconButton
-              className="sign-out-action"
-              aria-label="Sign out"
-              onClick={signOut}
-              disabled={signingOut}
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0,
-                color: 'common.white',
-                bgcolor: 'action.active',
-                transition: 'opacity 150ms ease',
-                '&:hover': { bgcolor: 'action.active' },
-              }}
-            >
-              <LogoutRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-        <Box minWidth={0} flexGrow={1}>
-          <Typography variant="body2" fontWeight={700} noWrap>
-            {user?.displayName ?? 'User'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {user?.email}
-          </Typography>
-        </Box>
-        <Tooltip title="Settings coming soon">
-          <SettingsOutlinedIcon color="action" />
-        </Tooltip>
-      </Stack>
     </Stack>
   );
   return (
@@ -232,6 +208,40 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Drawer>
         </>
       ) : null}
+      <Dialog open={profileOpen} onClose={() => setProfileOpen(false)} fullWidth maxWidth="xs">
+        <DialogTitle>Account</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar src={user?.avatarUrl ?? undefined}>{user?.displayName?.[0]}</Avatar>
+              <Box minWidth={0}>
+                <Typography fontWeight={700}>{user?.displayName ?? 'User'}</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
+                  {user?.email}
+                </Typography>
+              </Box>
+            </Stack>
+            <List disablePadding>
+              <Tooltip title="Settings coming soon" placement="right">
+                <span>
+                  <ListItemButton disabled>
+                    <ListItemIcon>
+                      <SettingsOutlinedIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Settings" />
+                  </ListItemButton>
+                </span>
+              </Tooltip>
+              <ListItemButton onClick={signOut} disabled={signingOut}>
+                <ListItemIcon>
+                  <LogoutRoundedIcon />
+                </ListItemIcon>
+                <ListItemText primary={signingOut ? 'Signing out…' : 'Sign out'} />
+              </ListItemButton>
+            </List>
+          </Stack>
+        </DialogContent>
+      </Dialog>
       <UsernameSetupDialog open={Boolean(user && !user.username)} />
     </Box>
   );
