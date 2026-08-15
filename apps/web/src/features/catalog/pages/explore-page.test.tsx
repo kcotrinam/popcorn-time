@@ -7,6 +7,7 @@ import type { CatalogPage } from '@popcorn-time/shared';
 import { ExplorePage } from './explore-page';
 import { getCatalog, getGenres } from '../catalog.api';
 import { getLibraryMemberships } from '../../library/library.api';
+import { HttpError } from '@/services/http-client';
 
 vi.mock('../catalog.api', () => ({ getCatalog: vi.fn(), getGenres: vi.fn() }));
 vi.mock('../../library/library.api', () => ({ getLibraryMemberships: vi.fn() }));
@@ -114,5 +115,32 @@ describe('ExplorePage', () => {
     expect(
       await screen.findByRole('link', { name: 'View poster for Arrival' }),
     ).toBeInTheDocument();
+  });
+
+  it('keeps invalid years out of the request until they are valid', async () => {
+    catalog.mockResolvedValue(page);
+    genres.mockResolvedValue([]);
+    memberships.mockResolvedValue({ results: [] });
+    renderPage();
+    await waitFor(() => expect(catalog).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '1800' } });
+    expect(
+      screen.getByText(`Enter a year from 1888 to ${new Date().getFullYear() + 1}.`),
+    ).toBeInTheDocument();
+    expect(catalog.mock.calls.at(-1)?.[0]).not.toMatchObject({ year: 1800 });
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2024' } });
+    await waitFor(() => expect(catalog.mock.calls.at(-1)?.[0]).toMatchObject({ year: 2024 }));
+  });
+
+  it('explains rate limits and offers a retry', async () => {
+    catalog.mockRejectedValue(new HttpError(429, 'Too many requests'));
+    genres.mockResolvedValue([]);
+    memberships.mockResolvedValue({ results: [] });
+    renderPage();
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Too many requests. Please wait a moment before trying again.',
+    );
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
   });
 });
