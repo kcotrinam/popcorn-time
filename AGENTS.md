@@ -1,45 +1,27 @@
-# Popcorn Time Project Instructions
+# Popcorn Time Agent Instructions
 
-## Project Overview
+Popcorn Time is a pnpm monorepo for a private, multi-user media manager. Read the relevant implementation and tests before changing behavior. Use [README.md](README.md) for developer workflow, [PRODUCT.md](PRODUCT.md) for product scope, and the targeted documents under `docs/` for architecture, authentication, domain rules, and roadmap status.
 
-Popcorn Time is a family-oriented, multi-user media manager for movies, TV series, anime, and documentaries.
+## Working conventions
 
-## Technology Stack
+- Use pnpm and the existing workspace scripts. Do not introduce dependencies or new architectural layers without a concrete need and explicit justification.
+- Preserve the established boundaries of the module being changed. Most database-backed API modules use `Router → Controller → Service → Repository → Prisma`; documented exceptions are intentional until explicitly refactored. Keep business decisions out of controllers and validate external input with Zod.
+- Keep TypeScript strict. Do not use `any`, and follow the shared ESLint and TypeScript configurations.
+- Do not add Redux, Zustand, or another global client-state library without an approved global-state requirement. Server state belongs in TanStack Query.
+- The browser must never call TMDB directly or receive its access token. Catalog data is normalized by the API and shared through `@popcorn-time/shared` contracts.
 
-- pnpm monorepo
-- Frontend: React, Vite, TypeScript, Material UI, and TanStack Query
-- Backend: Node.js, Express, and TypeScript
-- Database: PostgreSQL with Prisma
-- Authentication: custom email/password sessions
-- Local infrastructure: Docker Compose
+## Security and data
 
-## Architecture Rules
+- Preserve application-owned authentication, email verification outside local development, session rotation, CSRF protection for cookie-authenticated mutations, and log redaction.
+- Never expose JWT secrets, password hashes, email tokens, refresh tokens, or provider credentials to the frontend or logs.
+- Use Prisma migrations rather than `db push`. Preserve migration history, inspect generated SQL, and keep database names snake_case through Prisma mappings.
+- Apply soft deletion only where the schema and domain documentation explicitly define it.
 
-Backend modules follow `Router → Controller → Service → Repository → Prisma`. Keep business logic out of controllers and validate input with Zod. Do not use `any`. Do not add Zustand or Redux unless a real global client-state requirement has been explicitly approved.
+## Frontend and documentation
 
-Catalog modules follow `Router → Controller → Service → Provider/Repository → TMDB client`. TMDB is called only from the Express backend; normalized catalog contracts are shared through `@popcorn-time/shared`. Catalog endpoints are public and rate-limited. The frontend must never call TMDB directly or expose its access token.
-
-## Authentication Rules
-
-- The application owns authentication, password hashes, sessions, and tokens.
-- Never expose JWT secrets, password hashes, or email tokens to the frontend.
-- Use the application's UUID as the internal user ID and a normalized email address as the login identifier.
-- Preserve email verification, session rotation, CSRF protection for cookie-authenticated mutations, and secret redaction in logs.
-
-## Database Rules
-
-- Use Prisma migrations—not `db push`—for schema changes.
-- Use snake_case database names through Prisma mappings.
-- Use soft deletes only where explicitly defined, preserve migration history, and inspect generated SQL before applying migrations.
-
-## Routing and UI Rules
-
-The public landing page lives at `/` and must remain accessible to authenticated and unauthenticated visitors. It uses only local static mock poster assets and English copy. Its visual tokens must come from the Material UI theme palette; do not introduce hard-coded brand colors. Product-entry CTAs use `/sign-in` until their destination pages exist. Authenticated users remain on the landing page and see their avatar in the navbar.
-
-`/explore` and `/explore/:type/:id` are authenticated application routes. They use the application shell with its desktop sidebar and responsive mobile navigation. Phase progress belongs in `docs/roadmap.md`, not in this file.
-
-Read relevant files under `docs/` before implementing a task.
+- Preserve the public `/` route and authenticated application-route boundary. Follow `apps/web/DESIGN.md` for web UI work and use Material UI theme tokens instead of hard-coded brand colors in components.
+- Update the owning document when product scope, domain rules, architecture, authentication, developer workflow, or roadmap status changes. Do not duplicate the same rule across documents.
 
 ## Validation
 
-Before claiming completion, run `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build`. When database work changes, also run the applicable integration tests. Do not report a command as passing unless it was executed successfully.
+Before reporting completion, run `pnpm validate`. When database behavior changes, also run the applicable integration tests. Report a command as passing only when it completed successfully.

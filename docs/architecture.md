@@ -1,17 +1,85 @@
 # Architecture
 
-The public catalog follows `Router → Controller → Service → Provider/Repository → TMDB client`. TMDB is called only from the Express backend with a v4 read token. The catalog service normalizes results into shared Popcorn Time contracts, applies a short in-memory TTL cache, and never persists or exposes raw TMDB payloads. Catalog routes are public and are protected with per-IP rate limiting; they do not use session authentication or CSRF checks.
+## System boundaries
 
-For `discover?type=all`, movie and TV responses are queried separately and combined deterministically. Its pagination is an aggregation in v1 rather than a native TMDB page.
+Popcorn Time is a pnpm monorepo with two deployable applications and three internal packages:
 
-The protected personal library follows `Router → Controller → Service → Repository → Prisma`. TMDB creates resolve the trusted catalog snapshot through the catalog service before persisting a user-owned reference. Manual creates use a separate authenticated, CSRF-protected endpoint: before persisting, the library service verifies an exact normalized title match against TMDB. A confirmed match returns a typed conflict for catalog navigation, ambiguity returns a typed search conflict, and an unavailable catalog prevents the write. Only verified non-matches persist owner-provided private metadata; manual items never enter the public catalog. Reads authenticate the current session and mutations additionally use CSRF protection.
+```text
+Browser
+  ↓ HTTP + cookie credentials
+apps/web (React/Vite)
+  ↓ normalized JSON contracts
+apps/api (Express)
+  ├─ PostgreSQL through Prisma
+  ├─ TMDB through the catalog client
+  └─ Resend for production transactional email
+```
 
-The authenticated Home dashboard reads the same protected personal-library endpoint through independent client queries. A library query supplied in `/library?query=...` is an all-status search so results from both Pending and Watched are visible; ordinary library tabs continue to filter by their selected status.
+- `apps/web` owns browser routing, presentation, local UI preferences, and server-state orchestration with TanStack Query.
+- `apps/api` owns authentication, authorization, validation, business operations, provider access, persistence, and OpenAPI.
+- `packages/shared` owns normalized technical contracts and constants used by both applications. It does not contain business services or provider payloads.
+- `packages/eslint-config` and `packages/typescript-config` centralize workspace quality settings.
 
-Private user recommendations follow `Router → Controller → Service → Repository → Prisma`. A sender resolves a trusted TMDB snapshot at creation; only the recipient can atomically accept it into their private library or delete a pending recommendation. Public identity lookup is exact, authenticated, rate-limited, and returns only verified active users' display identity.
+## Frontend
 
-Private experiences are stored on the owner-scoped `user_media` row. The authenticated, CSRF-protected experience endpoint atomically records an optional half-point personal rating, optional private comment, watched timestamp, and `WATCHED` status. Moving an item back to Pending atomically clears every experience field.
+The web client is organized by feature under `apps/web/src/features`. React Router defines the public landing and authentication pages plus authenticated application routes. Authenticated product pages render through the shared application shell, which provides desktop and mobile navigation.
 
-Shared viewing plans follow `Router → Controller → Service → Prisma` and use only trusted TMDB snapshots. Reads hide pending invitation identities from non-creators. Completing a participant writes their progress and owner-private Experience/library record atomically. TMDB season data is normalized and cached at the catalog boundary; specials and future episodes are excluded.
+TanStack Query owns remote server state. Small persistent presentation preferences, such as theme and library view, use local storage. The frontend calls only the Popcorn Time API through `src/services/http-client.ts`; it does not call TMDB.
 
-In-app notifications follow `Router → Controller → Service → Repository → Prisma`. Records carry a structured event type, minimal title snapshot, resource reference, actor identity where available, and deterministic deduplication key. Recommendation and shared-plan mutations create notifications in their domain transaction; inbox operations are recipient-scoped.
+The public landing page remains available at `/` to signed-in and signed-out visitors. Product pages such as Home, Explore, Library, Recommendations, Shared Plans, and Notifications require an authenticated session.
+
+## API
+
+Express mounts versioned routes below `/api/v1`. Helmet, CORS, JSON limits, cookies, request IDs, structured redacted logging, not-found handling, and centralized error responses are configured globally.
+
+Most database-backed features follow:
+
+```text
+Router → Controller → Service → Repository → Prisma
+```
+
+Controllers translate HTTP input and output. Services own business decisions. Repositories own persistence queries and transactions. This is the prevailing convention, not a claim that every existing module already has the same shape:
+
+- Shared Plans currently performs Prisma operations directly in its service because its lifecycle is transaction-heavy.
+- Catalog uses a service, TMDB client, cache, and pure response normalizers; its `catalog.repository.ts` is a normalizer rather than a database repository.
+- Health constructs its service and repository in the router to support dependency isolation.
+
+New changes should preserve the boundary of the module being touched unless a focused refactor is explicitly in scope.
+
+## Catalog boundary
+
+Catalog routes are public, validated, and rate-limited per IP. The API calls TMDB with a server-only v4 read token, normalizes provider responses into `@popcorn-time/shared` contracts, and applies a short in-memory TTL cache. Raw provider payloads and the token never reach the browser.
+
+`discover?type=all` queries movie and television discovery independently and combines the results deterministically. Its pagination is an API aggregation rather than a native TMDB page.
+
+TMDB catalog records are not mirrored into a public PostgreSQL catalog. User workflows persist stable provider/type/external-ID references plus trusted display snapshots.
+
+## Persistence
+
+Prisma maps application names to snake_case PostgreSQL tables and columns. Schema changes use preserved migrations under `apps/api/prisma/migrations`; manually authored constraints and partial indexes remain part of migration history.
+
+The main persisted areas are:
+
+- internal users, refresh sessions, verification/reset tokens, and future external identities;
+- owner-scoped library items and private viewing experiences;
+- direct recommendations;
+- shared plans and participant progress;
+- recipient-owned notifications.
+
+Cross-record operations that affect recommendations, notifications, shared-plan state, or private library experience use Prisma transactions.
+
+## Authentication and request protection
+
+The application owns email/password identity. Access and refresh credentials are cookie based. Authenticated reads verify the session; cookie-authenticated mutations additionally require the CSRF cookie/header pair and an allowed Origin. Detailed security behavior and environment requirements are documented in [authentication.md](authentication.md).
+
+## Local infrastructure
+
+Root `compose.yaml` orchestrates PostgreSQL, the API image, and the Nginx-served web image for local use. Dockerfiles remain beside their owning applications because the current infrastructure is small and ownership is clear.
+
+The Compose application uses local-development authentication behavior at `http://localhost:8080`. It is not a production deployment definition. Production must supply secrets, HTTPS cookie settings, correct origins, provider credentials, and an email-delivery configuration.
+
+## API documentation
+
+OpenAPI is assembled in `apps/api/src/docs/openapi.ts` and served as JSON and Swagger UI by Express. Router changes must update the OpenAPI paths in the same change.
+
+Product-independent business rules are documented in [domain.md](domain.md). Source code, tests, Prisma schema, and migration SQL remain implementation truth.

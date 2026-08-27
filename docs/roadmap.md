@@ -8,7 +8,7 @@
 - **Phase 2A — Public TMDB catalog backend:** normalized, cached, rate-limited search, discovery, genre, and detail endpoints.
 - **Phase 2B — Authenticated Explore frontend:** responsive app shell, catalog discovery and search, filters, cards, pagination, and catalog detail pages.
 - **Phase 3 — Personal library:** private TMDB references with Pending/Watched status, protected idempotent mutations, filtering and pagination API, and responsive library UI.
-- **Authenticated Home dashboard:** protected `/home` with personal-library recents, library search handoff, watched-history timestamps, and intentional deferred-feature empty states.
+- **Authenticated Home dashboard:** protected `/home` with personal-library recents, library search handoff, watched-history timestamps, recommendations, and active shared plans.
 - **Manual content registration:** private owner-scoped movie and series entries, fixed categories, optional HTTPS poster links, and library filtering.
 - **Phase 4 — Personal ratings and private comments:** owner-private watched-date, rating, and comment experiences for library items.
 - **Phase 5 — Direct user-to-user recommendations:** usernames, trusted TMDB snapshots, private sending, acceptance into Pending, and Home integration.

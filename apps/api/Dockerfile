@@ -4,10 +4,12 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/package.json
 COPY packages/shared/package.json packages/shared/package.json
+COPY packages/eslint-config/package.json packages/eslint-config/package.json
 COPY packages/typescript-config/package.json packages/typescript-config/package.json
 RUN pnpm install --frozen-lockfile
 COPY apps/api apps/api
 COPY packages/shared packages/shared
+COPY packages/eslint-config packages/eslint-config
 COPY packages/typescript-config packages/typescript-config
 ENV DATABASE_URL=postgresql://build:build@localhost:5432/build?schema=public
 RUN pnpm --filter @popcorn-time/api prisma:generate && pnpm --filter @popcorn-time/api... build

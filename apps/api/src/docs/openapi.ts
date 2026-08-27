@@ -187,7 +187,13 @@ export const openapiSpec = {
             in: 'query',
             schema: {
               type: 'string',
-              enum: ['addedAt.desc', 'addedAt.asc', 'title.asc', 'releaseYear.desc'],
+              enum: [
+                'addedAt.desc',
+                'addedAt.asc',
+                'title.asc',
+                'releaseYear.desc',
+                'watchedAt.desc',
+              ],
             },
           },
           { name: 'page', in: 'query', schema: { type: 'integer' } },
@@ -223,11 +229,6 @@ export const openapiSpec = {
           '401': { description: 'Unauthenticated' },
           '403': { description: 'CSRF failed' },
           '400': { description: 'Invalid request' },
-          '409': {
-            description:
-              'An exact catalog match exists or multiple exact catalog matches require user selection',
-          },
-          '503': { description: 'Catalog verification is unavailable; no manual item was created' },
         },
       },
     },
@@ -268,6 +269,11 @@ export const openapiSpec = {
           '401': { description: 'Unauthenticated' },
           '403': { description: 'CSRF failed' },
           '400': { description: 'Invalid request' },
+          '409': {
+            description:
+              'An exact catalog match exists or multiple exact catalog matches require user selection',
+          },
+          '503': { description: 'Catalog verification is unavailable; no manual item was created' },
         },
       },
     },
@@ -371,6 +377,185 @@ export const openapiSpec = {
         },
       },
     },
+    '/api/v1/shared-plans': {
+      get: {
+        summary: 'List shared-plan invitations, active plans, or history',
+        parameters: [
+          {
+            name: 'view',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['invitations', 'active', 'history'],
+              default: 'active',
+            },
+          },
+          { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } },
+          {
+            name: 'pageSize',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 50, default: 20 },
+          },
+        ],
+        responses: {
+          '200': { description: 'Paginated shared plans' },
+          '401': { description: 'Unauthenticated' },
+        },
+      },
+      post: {
+        summary: 'Create a shared viewing plan',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['provider', 'externalId', 'mediaType', 'usernames'],
+                properties: {
+                  provider: { type: 'string', enum: ['tmdb'] },
+                  externalId: { type: 'integer', minimum: 1 },
+                  mediaType: { type: 'string', enum: ['movie', 'tv'] },
+                  usernames: {
+                    type: 'array',
+                    minItems: 1,
+                    maxItems: 9,
+                    items: { type: 'string', minLength: 3, maxLength: 30 },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Created shared plan' },
+          '400': { description: 'Invalid request or invitees' },
+          '401': { description: 'Unauthenticated' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Invitee or catalog item not found' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}': {
+      get: {
+        summary: 'Get an accessible shared plan',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Shared-plan detail with visibility-filtered participants' },
+          '401': { description: 'Unauthenticated' },
+          '404': { description: 'Plan not found or inaccessible' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/invitations': {
+      post: {
+        summary: 'Invite users to a shared plan as its creator',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Updated shared plan' },
+          '400': { description: 'Invalid invitees or participant limit exceeded' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Plan not found or inaccessible' },
+          '409': { description: 'Invitee is already a participant' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/accept': {
+      post: {
+        summary: 'Accept a shared-plan invitation',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Accepted shared plan' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Invitation not found' },
+          '409': { description: 'Plan is read-only' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/participants/me': {
+      delete: {
+        summary: 'Leave a shared plan',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '204': { description: 'Participant removed' },
+          '400': { description: 'The creator cannot leave' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Plan or participant not found' },
+          '409': { description: 'Plan is read-only' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/participants/{userId}': {
+      delete: {
+        summary: 'Remove a participant as the plan creator',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+          {
+            name: 'userId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          '204': { description: 'Participant removed' },
+          '400': { description: 'The creator cannot be removed' },
+          '403': { description: 'Not the creator or CSRF failed' },
+          '404': { description: 'Plan or participant not found' },
+          '409': { description: 'Plan is read-only' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/progress': {
+      put: {
+        summary: 'Update the current participant progress',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Updated shared plan' },
+          '400': { description: 'Invalid movie or episode progress' },
+          '403': { description: 'Invitation not accepted or CSRF failed' },
+          '404': { description: 'Plan not found' },
+          '409': { description: 'Plan is read-only' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/complete': {
+      post: {
+        summary: 'Complete the current participant progress and save a private experience',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Updated shared plan and private experience' },
+          '400': { description: 'Invalid experience' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Accepted participant not found' },
+          '409': { description: 'Plan is read-only' },
+        },
+      },
+    },
+    '/api/v1/shared-plans/{id}/cancel': {
+      post: {
+        summary: 'Cancel a shared plan as its creator',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Cancelled shared plan' },
+          '403': { description: 'CSRF failed' },
+          '404': { description: 'Active creator-owned plan not found' },
+        },
+      },
+    },
     '/api/v1/catalog/search': {
       get: {
         summary: 'Search the public catalog',
@@ -456,6 +641,38 @@ export const openapiSpec = {
         responses: {
           '200': { description: 'Catalog genres' },
           '400': { description: 'Invalid query' },
+          '503': { description: 'TMDB unavailable' },
+        },
+      },
+    },
+    '/api/v1/catalog/tv/{id}/seasons': {
+      get: {
+        summary: 'List normalized non-special television seasons',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 } },
+        ],
+        responses: {
+          '200': { description: 'Aired and current normalized seasons' },
+          '404': { description: 'Series not found' },
+          '503': { description: 'TMDB unavailable' },
+        },
+      },
+    },
+    '/api/v1/catalog/tv/{id}/seasons/{seasonNumber}': {
+      get: {
+        summary: 'List normalized aired episodes for a television season',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'integer', minimum: 1 } },
+          {
+            name: 'seasonNumber',
+            in: 'path',
+            required: true,
+            schema: { type: 'integer', minimum: 1 },
+          },
+        ],
+        responses: {
+          '200': { description: 'Normalized aired episodes' },
+          '404': { description: 'Series or season not found' },
           '503': { description: 'TMDB unavailable' },
         },
       },
